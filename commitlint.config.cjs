@@ -1,8 +1,8 @@
 module.exports = {
   // extends: ["@commitlint/config-conventional"],
   // extends: ["cz"],
-  // parserPreset: "conventional-changelog-conventionalcommits",
   rules: {
-    "type-enum": [2, "always", ["--n", "--bug", "--story"]],
+    "type-empty": [2, "never"],
+    "type-enum": [2, "always", ["n", "bug", "story"]],
   },
 };
