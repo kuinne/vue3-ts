@@ -3,6 +3,7 @@ lockfileVersion: 5.4
 specifiers:
   '@commitlint/cli': ^17.5.1
   '@commitlint/config-conventional': ^17.4.4
+  '@element-plus/icons-vue': ^2.1.0
   '@types/echarts': ^4.9.16
   '@types/lodash': ^4.14.192
   '@vitejs/plugin-vue': ^4.1.0
@@ -29,6 +30,7 @@ specifiers:
   vuedraggable: ^4.1.0
 
 dependencies:
+  '@element-plus/icons-vue': 2.1.0_vue@3.2.47
   ant-design-vue: 3.2.16_vue@3.2.47
   echarts: 5.4.2
   element-plus: 2.3.1_vue@3.2.47
