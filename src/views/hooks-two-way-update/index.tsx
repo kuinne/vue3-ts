@@ -11,6 +11,7 @@ import draggable from "vuedraggable";
 import styles from "./style.module.scss";
 import { ElTree, ElTable } from "element-plus";
 import { cloneDeep } from "lodash";
+import dayjs, { type Dayjs } from "dayjs";
 const Draggable = defineComponent(draggable);
 
 const sleep = () =>
@@ -58,18 +59,47 @@ const mockFormData = {
   list: ["1-1-1", "1", "1-1"],
 };
 
+const useDatePicker = () => {
+  const timeRange = ref<Date[]>([]);
+  watch(timeRange, () => {
+    console.log("timeRange", timeRange.value);
+  });
+
+  const DatePicker = () => (
+    <el-date-picker v-model={timeRange.value} type="daterange" />
+  );
+  onMounted(async () => {
+    await sleep();
+    timeRange.value = [new Date(), new Date()];
+  });
+  return {
+    timeRange,
+    DatePicker,
+  };
+};
+
 const useTree = () => {
   const elTreeRef = ref<InstanceType<typeof ElTree>>();
-  const data = ref<any[]>(mockTreeData);
+  const data = ref<any[]>([]);
 
   const defaultProps = {
     children: "children",
     label: "label",
   };
 
-  const checkedKeys = computed(
-    () => (elTreeRef?.value?.getCheckedKeys() as string[]) || []
-  );
+  const checkedKeys = ref<string[]>([]);
+
+  const defaultCheckedKeys = ref<string[]>([]);
+
+  const checkedNodes = ref<any[]>([]);
+
+  const handleCheck = (
+    data: any,
+    { checkedKeys: _checkedKeys, checkedNodes: _checkedNodes }: any
+  ) => {
+    checkedKeys.value = _checkedKeys;
+    checkedNodes.value = _checkedNodes;
+  };
 
   const Tree = () => (
     <el-tree
@@ -80,8 +110,21 @@ const useTree = () => {
       default-expand-all
       check-strictly
       nodeKey="id"
+      defaultCheckedKeys={defaultCheckedKeys.value}
+      onCheck={handleCheck}
     />
   );
+
+  const fetchData = async () => {
+    await sleep();
+    data.value = mockTreeData;
+    checkedKeys.value = defaultCheckedKeys.value = [mockTreeData[0].id];
+    checkedNodes.value = [mockTreeData[0]];
+  };
+
+  onMounted(() => {
+    fetchData();
+  });
 
   return {
     Tree,
@@ -92,9 +135,11 @@ const useTree = () => {
 const useTable = ({
   filterKeys,
   defaultSelectionKeys,
+  timeRange,
 }: {
   filterKeys: Ref<string[]>;
   defaultSelectionKeys: Ref<string[]>;
+  timeRange: Ref<[Date, Date]>;
 }) => {
   const elTableRef = ref<InstanceType<typeof ElTable>>();
   const data = ref<any[]>([]);
@@ -106,15 +151,18 @@ const useTable = ({
   };
 
   const setSelectionRows = () => {
-    const defaultSelectionRows = defaultSelectionKeys.value.map((key) =>
-      data.value.find((item) => item.id === key)
-    );
+    const defaultSelectionRows = defaultSelectionKeys.value
+      .map((key) => data.value.find((item) => item.id === key))
+      .filter((item) => !!item);
+
     defaultSelectionRows.forEach((row) =>
       elTableRef?.value?.toggleRowSelection(row, true)
     );
   };
 
   const fetchData = async () => {
+    console.log("=============fetch table data===============");
+
     await sleep();
     if (filterKeys.value.length === 0) {
       data.value = mockTableData;
@@ -143,17 +191,16 @@ const useTable = ({
     </el-table>
   );
 
-  watch(
-    () => filterKeys.value,
-    () => {
+  watch([filterKeys, timeRange], (val, oldVal) => {
+    if (timeRange.value.length > 0 && filterKeys.value.length > 0) {
       fetchData();
     }
-  );
+  });
 
   watch(
     () => defaultSelectionKeys.value,
     () => {
-      init();
+      // init();
     }
   );
 
@@ -215,10 +262,13 @@ export default defineComponent({
       list: [],
     });
 
+    const { DatePicker, timeRange } = useDatePicker();
+
     const { Tree, checkedKeys } = useTree();
     const { Table, selectionRows } = useTable({
       filterKeys: checkedKeys,
       defaultSelectionKeys: computed(() => formData.value.list),
+      timeRange,
     });
     const { List, orderedList } = useList({
       list: selectionRows,
@@ -229,6 +279,7 @@ export default defineComponent({
     }, 1000);
     return () => (
       <div class={styles["container"]}>
+        <DatePicker />
         <Tree />
         <Table />
         <List />
