@@ -139,7 +139,7 @@ const useTable = ({
 }: {
   filterKeys: Ref<string[]>;
   defaultSelectionKeys: Ref<string[]>;
-  timeRange: Ref<[Date, Date]>;
+  timeRange: Ref<Date[]>;
 }) => {
   const elTableRef = ref<InstanceType<typeof ElTable>>();
   const data = ref<any[]>([]);
@@ -253,6 +253,35 @@ const useList = ({ list }: { list: Ref<any[]> }) => {
     List,
     orderedList: data,
   };
+};
+
+const videos = [
+  {
+    device: {},
+    timeRange: [],
+    playState: {
+      paused: false,
+      speed: 1,
+    },
+  },
+];
+
+const currentIndex = 1;
+
+const replace = (newDevice) => {
+  const old = videos[currentIndex];
+  if (old) {
+    old.device = newDevice;
+  } else {
+    videos[currentIndex] = {
+      device: newDevice,
+      timeRange: [],
+      playState: {
+        paused: false,
+        speed: 1,
+      },
+    };
+  }
 };
 
 export default defineComponent({
