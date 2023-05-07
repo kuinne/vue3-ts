@@ -33,9 +33,11 @@
     "lodash": "^4.17.21",
     "vue": "^3.2.47",
     "vue-router": "4",
+    "vue-webrtc": "^3.0.1",
     "vue3-draggable": "^2.0.9",
     "vue3-echarts": "^1.1.0",
-    "vuedraggable": "^4.1.0"
+    "vuedraggable": "^4.1.0",
+    "webrtc-adapter": "^8.2.2"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.5.1",
