@@ -1,0 +1,16 @@
+$grid-columns: 24;
+
+@for $i from 1 through $grid-columns {
+  .col-#{$i} {
+    display: block;
+    max-width: percentage($i / $grid-columns);
+    flex: 0 0 percentage($i / $grid-columns);
+  }
+  .col-offset-#{$i} {
+    margin-left: percentage($i / $grid-columns);
+  }
+}
+
+.row {
+  display: flex;
+}

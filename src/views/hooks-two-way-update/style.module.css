@@ -1,0 +1,21 @@
+.container {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  height: 100%;
+  width: 600px;
+}
+
+.list-group-item {
+  border: 1px solid #666;
+  width: 200px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.ghost {
+  opacity: 0.5;
+  background: #c8ebfb;
+}/*# sourceMappingURL=style.module.css.map */
