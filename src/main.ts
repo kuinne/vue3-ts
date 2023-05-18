@@ -9,8 +9,10 @@ import * as ElementPlusIconsVue from "@element-plus/icons-vue";
 import Antd from "ant-design-vue";
 import "ant-design-vue/dist/antd.css";
 
-const app = createApp(App);
+import { createPinia } from "pinia";
 
+const app = createApp(App);
+app.use(createPinia());
 app.use(router);
 app.use(ElementPlus);
 app.use(Antd);
