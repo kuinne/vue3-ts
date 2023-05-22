@@ -1,126 +1,130 @@
 <template>
-  <div>
-    <el-button @click="getRangeSelection">getRangeSelection</el-button>
-    <el-select v-model="year">
-      <el-option
-        v-for="item in options"
-        :key="item.value"
-        :label="item.label"
-        :value="item.value"
-      />
-    </el-select>
-    <div class="calendar"></div>
+  <div class="calendar">
+    <div class="calendar__header">
+      <div class="icon minus-icon" @click="changeYear('minus')">-</div>
+      <div class="year">{{ year }}</div>
+      <div class="icon plus-icon" @click="changeYear('plus')">+</div>
+    </div>
+    <div class="calendar__body">
+      <template v-for="month in 12">
+        <MonthCalendar
+          :year="year"
+          :month="month"
+          @day-click="handleDayClick"
+          @day-mouse-enter="handleMouseEnter"
+          @day-mouse-leave="handleMouseLeave"
+          :is-hovered="isHovered"
+        />
+      </template>
+    </div>
   </div>
 </template>
+
 <script setup lang="ts">
-import { ref, onMounted, watch } from "vue";
-import Calender from "js-year-calendar";
-import "js-year-calendar/locales/js-year-calendar.zh-CN";
-import "js-year-calendar/dist/js-year-calendar.css";
-const year = ref(2022);
-const options = [
-  {
-    label: "2021",
-    value: 2021,
-  },
-  {
-    label: "2022",
-    value: 2022,
-  },
-  {
-    label: "2023",
-    value: 2023,
-  },
-];
-let calendar: any = null;
-onMounted(() => {
-  const elm = document.querySelector(".calendar") as HTMLDivElement;
-  if (elm) {
-    const currentYear = new Date().getFullYear();
-    calendar = new Calender(elm, {
-      style: "background",
-      language: "zh-CN",
-      loadingTemplate: "zzz",
-      enableRangeSelection: true,
-
-      dataSource: [
-        {
-          startDate: new Date(currentYear, 1, 4),
-          endDate: new Date(currentYear, 1, 15),
-        },
-        {
-          startDate: new Date(currentYear, 3, 5),
-          endDate: new Date(currentYear, 5, 15),
-        },
-      ],
-      clickDay(e) {
-        console.log("clickDay", e);
-      },
-      selectRange(e) {
-        console.log("selectRange", e);
-      },
-      customDayRenderer(element, currentDate) {
-        console.log("element", element, currentDate);
-      },
-    });
+import { ref } from 'vue'
+import MonthCalendar, { Day } from './components/MonthCalendar.vue'
+const year = ref(2019)
+const changeYear = (type: 'minus' | 'plus') => {
+  switch (type) {
+    case 'minus':
+      year.value -= 1
+      break
+    case 'plus':
+      year.value += 1
+    default:
+      break
   }
-});
+}
+const startTime = ref<Day>()
+const endTime = ref<Day>()
+const willEndTime = ref<Day>()
+const handleDayClick = (cur: Day) => {
+  if (startTime.value && endTime.value) {
+    startTime.value.isSelected = false
+    startTime.value = undefined
+    endTime.value.isSelected = false
+    endTime.value = undefined
+    willEndTime.value = undefined
+  }
+  if (!startTime.value) {
+    startTime.value = cur
+    cur.isSelected = true
+  } else if (!endTime.value) {
+    endTime.value = cur
+    cur.isSelected = true
+  }
+}
 
-watch(year, () => {
-  if (!calendar) return;
-  calendar.setYear(year.value);
-  //   calendar.setStyle("border");
-});
+const handleMouseEnter = (cur: Day) => {
+  if (startTime.value && endTime.value) {
+    return
+  } else if (startTime.value) {
+    if (cur.date !== startTime.value.date) {
+      cur.isSelected = true
+      willEndTime.value = cur
+    }
+  }
+}
+const handleMouseLeave = (cur: Day) => {
+  if (startTime.value && endTime.value) {
+    return
+  } else if (startTime.value) {
+    if (cur.date !== startTime.value.date) {
+      cur.isSelected = false
+      if (willEndTime.value === cur) {
+        willEndTime.value = undefined
+      }
+    }
+  }
+}
+const isHovered = (day: Day) => {
+  const _e = endTime.value || willEndTime.value
+  const _startTime = _e
+    ? _e.date < startTime.value!.date
+      ? _e
+      : startTime.value
+    : startTime.value
+  const _endTime = _e
+    ? _e.date > startTime.value!.date
+      ? _e
+      : startTime.value
+    : _e
 
-const getRangeSelection = () => {
-  if (!calendar) return;
-  console.log(calendar.getEnableRangeSelection());
-};
+  if (_endTime) {
+    return day.date < _endTime.date && day.date > _startTime!.date
+  } else if (_startTime) {
+    return day.date > _startTime.date
+  } else {
+    return false
+  }
+}
 </script>
-<style scoped lang="scss">
-// :deep(.calendar) {
-//   .calendar-header {
-//     background-color: #cc251f;
-//     color: white;
-//     border: 0;
-//   }
-//   .calendar-header .year-title:hover,
-//   .calendar-header .prev:hover,
-//   .calendar-header .next:hover {
-//     background: rgba(255, 255, 255, 0.2);
-//   }
 
-//   .calendar-header .year-neighbor {
-//     color: inherit;
-//     opacity: 0.7;
-//   }
-
-//   .calendar-header .year-neighbor2 {
-//     color: inherit;
-//     opacity: 0.4;
-//   }
-
-//   .month-container {
-//     height: 210px;
-//   }
-
-//   table.month {
-//     height: 100%;
-//   }
-
-//   table.month .month-title {
-//     background-color: #cc251f;
-//     color: white;
-//     padding: 5px;
-//   }
-
-//   table.month .day-header {
-//     padding-top: 8px;
-//     border-bottom: 2px solid #cc251f;
-//   }
-
-//   table.month td.day .day-content {
-//     padding: 5px 8px;
-//   }
-// }
+<style lang="scss" scoped>
+.year {
+  text-align: center;
+  font-size: 20px;
+  font-weight: bold;
+}
+.calendar {
+  overflow: auto;
+  max-height: 100vh;
+}
+.calendar__header {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  .icon {
+    font-size: 20px;
+    cursor: pointer;
+    &:hover {
+      color: blue;
+    }
+  }
+}
+.calendar__body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
 </style>
