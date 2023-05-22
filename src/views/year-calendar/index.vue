@@ -90,13 +90,10 @@ const isHovered = (day: Day) => {
       : startTime.value
     : _e
 
-  if (_endTime) {
+  if (_endTime && _startTime) {
     return day.date < _endTime.date && day.date > _startTime!.date
-  } else if (_startTime) {
-    return day.date > _startTime.date
-  } else {
-    return false
   }
+  return false
 }
 </script>
 

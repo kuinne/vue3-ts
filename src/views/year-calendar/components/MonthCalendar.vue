@@ -141,12 +141,15 @@ const getDaysInMonth = () => {
 }
 
 const handleClick = (day: Day) => {
+  if (day.type !== 'cur') return
   emits('day-click', day)
 }
 const handleMouseEnter = (day: Day) => {
+  if (day.type !== 'cur') return
   emits('day-mouse-enter', day)
 }
 const handleMouseLeave = (day: Day) => {
+  if (day.type !== 'cur') return
   emits('day-mouse-leave', day)
 }
 watch(
@@ -179,6 +182,7 @@ watch(
   display: flex;
   justify-content: center;
   border-bottom: 1px solid #ccc;
+  user-select: none;
 }
 .week {
   display: flex;
@@ -217,5 +221,6 @@ watch(
 .day-item {
   width: 50px;
   height: 30px;
+  user-select: none;
 }
 </style>
