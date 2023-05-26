@@ -1,25 +1,29 @@
 <template>
-  <div class="calendar">
-    <div class="month">{{ monthMapping[month - 1] }}</div>
-    <div class="week">
-      <div class="week-item" v-for="week in weekMapping">{{ week }}</div>
+  <div class="month-calendar">
+    <div class="month">
+      {{ title }}
     </div>
-    <div class="day">
-      <div
-        :class="[
-          'day-item',
-          {
-            'is-disabled': day.type !== 'cur',
-            'is-selected': day.isSelected,
-            'is-hovered': isHovered(day),
-          },
-        ]"
-        v-for="day in days"
-        @click.stop="() => handleClick(day)"
-        @mouseenter.stop="() => handleMouseEnter(day)"
-        @mouseleave.stop="() => handleMouseLeave(day)"
-      >
-        {{ day.date.getDate() }}
+    <div class="month-calendar_body">
+      <div class="week">
+        <div class="week-item" v-for="week in weekMapping">{{ week }}</div>
+      </div>
+      <div class="day">
+        <div
+          :class="[
+            'day-item',
+            {
+              'is-disabled': day.type !== 'cur',
+              'is-selected': day.isSelected,
+              'is-hovered': isHovered(day),
+            },
+          ]"
+          v-for="day in days"
+          @click.stop="() => handleClick(day)"
+          @mouseenter.stop="() => handleMouseEnter(day)"
+          @mouseleave.stop="() => handleMouseLeave(day)"
+        >
+          {{ day.date.date() }}
+        </div>
       </div>
     </div>
   </div>
@@ -27,168 +31,183 @@
 
 <script setup lang="ts">
 export type Day = {
-  type: 'pre' | 'cur' | 'next'
-  date: Date
-  isSelected: boolean
-}
-import dayjs from 'dayjs'
-import { ref, toRefs, watch } from 'vue'
+  type: "pre" | "cur" | "next";
+  date: Dayjs;
+  isSelected: boolean;
+};
+import dayjs, { Dayjs } from "dayjs";
+import { computed, ref, toRefs, watch } from "vue";
 
-const monthMapping = [
-  '一月',
-  '二月',
-  '三月',
-  '四月',
-  '五月',
-  '六月',
-  '七月',
-  '八月',
-  '九月',
-  '十月',
-  '十一月',
-  '十二月',
-]
-const weekMapping = ['日', '一', '二', '三', '四', '五', '六']
+const title = computed(() =>
+  dayjs()
+    .year(year.value)
+    .month(month.value - 1)
+    .format("YYYY年M月")
+);
+const weekMapping = ["一", "二", "三", "四", "五", "六", "日"];
 const props = defineProps<{
-  year: number
-  month: number
-  isHovered: (day: Day) => boolean
-}>()
+  year: number;
+  month: number;
+  isHovered: (day: Day) => boolean;
+}>();
 
 const emits = defineEmits<{
-  ($event: 'day-click', day: Day): void
-  ($event: 'day-mouse-enter', day: Day): void
-  ($event: 'day-mouse-leave', day: Day): void
-}>()
+  ($event: "day-click", day: Day): void;
+  ($event: "day-mouse-enter", day: Day): void;
+  ($event: "day-mouse-leave", day: Day): void;
+}>();
 
-const { year, month, isHovered } = toRefs(props)
+const { year, month, isHovered } = toRefs(props);
 
-const days = ref<Day[]>([])
+const days = ref<Day[]>([]);
+
+const curDate = computed(() =>
+  dayjs()
+    .year(year.value)
+    .month(month.value - 1)
+);
 const initCalendar = () => {
-  days.value = []
-  const firstDayOfMonth = getFirstDayOfMonth()
-  console.log('firstDayOfMonth', firstDayOfMonth)
-  const daysInMonth = getDaysInMonth()
+  days.value = [];
+  const firstDayOfMonth = curDate.value.startOf("month").day();
+
   // 本月第一天是周几
-  const totalDays = 7 * 6
-  const preDays = new Date(year.value, month.value - 1, 1).getDay() || 7
+  const totalDays = 7 * 6;
+  let preDays = dayjs()
+    .year(year.value - 1)
+    .month(month.value - 1)
+    .startOf("month")
+    .day();
 
-  const curDays = daysInMonth[month.value - 1]
+  if (preDays === 6) {
+    preDays = 0;
+  }
 
-  const nextDays = totalDays - preDays - curDays
+  const curDays = curDate.value.daysInMonth();
 
-  for (let i = preDays - 1; i >= 0; i--) {
+  const nextDays = totalDays - preDays - curDays;
+
+  for (let i = preDays; i >= 0; i--) {
     if (month.value === 1) {
+      // 取去年12月份的后preDays天
       days.value.push({
-        type: 'pre',
-        date: new Date(
-          year.value - 1,
-          11,
-          new Date(year.value - 1, 11, daysInMonth[11]).getDate() - i
-        ),
+        type: "pre",
+        date: dayjs()
+          .year(year.value - 1)
+          .month(12 - 1)
+          .endOf("month")
+          .subtract(i, "days"),
         isSelected: false,
-      })
+      });
     } else {
+      // 取前一月份的后preDays天
       days.value.push({
-        type: 'pre',
-        date: new Date(
-          year.value,
-          month.value - 2,
-          new Date(
-            year.value,
-            month.value - 2,
-            daysInMonth[month.value - 2]
-          ).getDate() - i
-        ),
+        type: "pre",
+        date: dayjs()
+          .year(year.value)
+          .month(month.value - 2)
+          .endOf("month")
+          .subtract(i, "days"),
         isSelected: false,
-      })
+      });
     }
   }
 
   for (let i = 0; i < curDays; i++) {
+    // 取当前月份第i+1号
     days.value.push({
-      type: 'cur',
-      date: new Date(year.value, month.value - 1, i + 1),
+      type: "cur",
+      date: dayjs()
+        .year(year.value)
+        .month(month.value - 1)
+        .date(i + 1),
       isSelected: false,
-    })
+    });
   }
 
-  for (let i = 0; i < nextDays; i++) {
-    days.value.push({
-      type: 'next',
-      date: new Date(year.value, month.value, i + 1),
-      isSelected: false,
-    })
+  for (let i = 0; i < nextDays - 1; i++) {
+    if (month.value === 12) {
+      // 取下一年的一月份的前nextDayjs天
+      days.value.push({
+        type: "next",
+        date: dayjs()
+          .year(year.value + 1)
+          .month(month.value)
+          .date(i + 1),
+        isSelected: false,
+      });
+    } else {
+      // 取下一月份前nextDayjs天
+      days.value.push({
+        type: "next",
+        date: dayjs()
+          .year(year.value)
+          .month(month.value)
+          .date(i + 1),
+        isSelected: false,
+      });
+    }
   }
-}
-
-/** 当月第一天的位置 */
-const getFirstDayOfMonth = () => {
-  return new Date(year.value, month.value - 1, 1).getDay()
-}
-
-const getDaysInMonth = () => {
-  let daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-
-  if (
-    (year.value % 4 === 0 && year.value % 100 !== 0) ||
-    year.value % 400 === 0
-  ) {
-    // 闰年处理
-    daysInMonth[1] = 29
-  }
-  return daysInMonth
-}
+  console.log("sss", days.value.length);
+};
 
 const handleClick = (day: Day) => {
-  if (day.type !== 'cur') return
-  emits('day-click', day)
-}
+  if (day.type !== "cur") return;
+  emits("day-click", day);
+};
 const handleMouseEnter = (day: Day) => {
-  if (day.type !== 'cur') return
-  emits('day-mouse-enter', day)
-}
+  if (day.type !== "cur") return;
+  emits("day-mouse-enter", day);
+};
 const handleMouseLeave = (day: Day) => {
-  if (day.type !== 'cur') return
-  emits('day-mouse-leave', day)
-}
+  if (day.type !== "cur") return;
+  emits("day-mouse-leave", day);
+};
 watch(
   year,
   () => {
-    initCalendar()
+    initCalendar();
   },
   {
     immediate: true,
   }
-)
+);
 watch(
   month,
   () => {
-    initCalendar()
+    initCalendar();
   },
   {
     immediate: true,
   }
-)
+);
 </script>
 
 <style lang="scss" scoped>
-.calendar {
-  width: 200px;
-  /* width: 100%; */
-  border: 1px solid #ccc;
+.month-calendar {
+  border: 1px solid rgba(217, 217, 217, 1);
+  border-radius: 2px;
+  &_body {
+    padding: 3px 20px;
+  }
 }
 .month {
   display: flex;
   justify-content: center;
-  border-bottom: 1px solid #ccc;
+  align-items: center;
+  border-bottom: 1px solid rgba(217, 217, 217, 1);
   user-select: none;
+  height: 36px;
+  font-size: 14px;
+  color: #212121;
+  font-weight: 600;
+  background: #fafafa;
 }
 .week {
   display: flex;
 
   .week-item {
-    flex: 0 0 calc(100% / 7);
+    width: calc(100% / 7);
+    height: 32px;
     display: flex;
     justify-content: center;
   }
@@ -196,8 +215,10 @@ watch(
 .day {
   display: flex;
   flex-wrap: wrap;
+  // padding: 0 20px;
   .day-item {
-    flex: 0 0 calc(100% / 7);
+    width: calc(100% / 7);
+    height: 32px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -206,7 +227,7 @@ watch(
       color: blue;
     }
     &.is-disabled {
-      color: #ccc;
+      visibility: hidden;
     }
     &:not(.is-disabled).is-selected {
       background-color: blue !important;
@@ -217,10 +238,10 @@ watch(
     }
   }
 }
-.week-item,
-.day-item {
-  width: 50px;
-  height: 30px;
-  user-select: none;
-}
+// .week-item,
+// .day-item {
+//   width: 50px;
+//   height: 30px;
+//   user-select: none;
+// }
 </style>
