@@ -13,12 +13,10 @@
             'day-item',
             {
               'is-disabled': day.type !== 'cur',
+              'is-selected': day.isSelected,
+              'is-hovered': isHovered(day),
             },
           ]"
-          :style="{
-            background: color(day.date) || 'unset',
-            color: color(day.date) ? '#fff' : 'unset',
-          }"
           v-for="day in days"
           @click.stop="() => handleClick(day)"
           @mouseenter.stop="() => handleMouseEnter(day)"
@@ -37,6 +35,7 @@ import calendar from 'dayjs/plugin/calendar'
 export type Day = {
   type: 'pre' | 'cur' | 'next'
   date: Dayjs
+  isSelected: boolean
 }
 import dayjs, { Dayjs } from 'dayjs'
 import { computed, ref, toRefs, watch, withDefaults } from 'vue'
@@ -53,10 +52,11 @@ const props = withDefaults(
   defineProps<{
     year: number
     month: number
-    color?: (date: Dayjs) => string | null
+    isHovered: (day: Day) => boolean
+    color?: string
   }>(),
   {
-    color: (date: Dayjs) => 'blue',
+    color: 'green',
   }
 )
 
@@ -66,19 +66,26 @@ const emits = defineEmits<{
   ($event: 'day-mouse-leave', day: Day): void
 }>()
 
-const { color, year, month } = toRefs(props)
+const { year, month, isHovered, color } = toRefs(props)
 
 const days = ref<Day[]>([])
 
-const curDate = computed(() => dayjs().year(year.value).month(month.value))
+const curDate = computed(() =>
+  dayjs()
+    .year(year.value)
+    .month(month.value - 1)
+)
 const initCalendar = () => {
   days.value = []
 
   // 本月第一天是周几
   const totalDays = 7 * 6
   let preDays =
-    (dayjs().year(year.value).month(month.value).startOf('month').day() || 7) -
-    1
+    (dayjs()
+      .year(year.value)
+      .month(month.value - 1)
+      .startOf('month')
+      .day() || 7) - 1
 
   const curDays = curDate.value.daysInMonth()
 
@@ -94,6 +101,7 @@ const initCalendar = () => {
           .month(12 - 1)
           .endOf('month')
           .subtract(i, 'days'),
+        isSelected: false,
       })
     } else {
       // 取前一月份的后preDays天
@@ -101,9 +109,10 @@ const initCalendar = () => {
         type: 'pre',
         date: dayjs()
           .year(year.value)
-          .month(month.value - 1)
+          .month(month.value - 2)
           .endOf('month')
           .subtract(i, 'days'),
+        isSelected: false,
       })
     }
   }
@@ -114,8 +123,9 @@ const initCalendar = () => {
       type: 'cur',
       date: dayjs()
         .year(year.value)
-        .month(month.value)
+        .month(month.value - 1)
         .date(i + 1),
+      isSelected: false,
     })
   }
 
@@ -126,8 +136,9 @@ const initCalendar = () => {
         type: 'next',
         date: dayjs()
           .year(year.value + 1)
-          .month(month.value + 1)
+          .month(month.value)
           .date(i + 1),
+        isSelected: false,
       })
     } else {
       // 取下一月份前nextDayjs天
@@ -135,13 +146,26 @@ const initCalendar = () => {
         type: 'next',
         date: dayjs()
           .year(year.value)
-          .month(month.value + 1)
+          .month(month.value)
           .date(i + 1),
+        isSelected: false,
       })
     }
   }
 }
 
+const handleClick = (day: Day) => {
+  if (day.type !== 'cur') return
+  emits('day-click', day)
+}
+const handleMouseEnter = (day: Day) => {
+  if (day.type !== 'cur') return
+  emits('day-mouse-enter', day)
+}
+const handleMouseLeave = (day: Day) => {
+  if (day.type !== 'cur') return
+  emits('day-mouse-leave', day)
+}
 watch(
   year,
   () => {
@@ -160,19 +184,6 @@ watch(
     immediate: true,
   }
 )
-
-const handleClick = (day: Day) => {
-  if (day.type !== 'cur') return
-  emits('day-click', day)
-}
-const handleMouseEnter = (day: Day) => {
-  if (day.type !== 'cur') return
-  emits('day-mouse-enter', day)
-}
-const handleMouseLeave = (day: Day) => {
-  if (day.type !== 'cur') return
-  emits('day-mouse-leave', day)
-}
 </script>
 
 <style lang="scss" scoped>
@@ -223,11 +234,11 @@ const handleMouseLeave = (day: Day) => {
       visibility: hidden;
     }
     &:not(.is-disabled).is-selected {
-      /* background-color: v-bind(color) !important; */
+      background-color: v-bind(color) !important;
       color: #fff;
     }
     &:not(.is-disabled).is-hovered {
-      /* background-color: v-bind(color); */
+      background-color: v-bind(color);
       color: #fff;
     }
   }
