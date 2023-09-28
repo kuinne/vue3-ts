@@ -2,6 +2,8 @@ import { cloneDeep, pick } from 'lodash'
 import { Ref, computed, defineComponent, ref, watch } from 'vue'
 import SubitemGroup from './components/SubitemGroup/index.vue'
 import ProductSelect from './components/ProductSelect/index.vue'
+import TestInput from './components/TestInput/index.vue'
+import DeviceSelect from './components/DeviceSelect'
 import { ElInput, ElOption, ElSelect } from 'element-plus'
 type Product = {
   productId?: string
@@ -86,6 +88,13 @@ export default defineComponent({
                   <ElOption value="2" label="设备2"></ElOption>
                 </ElSelect>
               ) : null}
+              <DeviceSelect
+                v-model={group(item, ['deviceId', 'deviceName']).value}
+              />
+              <input v-model={item.deviceId} />
+              <ElInput v-model={item.deviceId}></ElInput>
+              <TestInput v-model={item.deviceId}></TestInput>
+              <ElSelect v-model={item.deviceId}></ElSelect>
             </>
           ),
           subitem: ({ subitem, item }: any) => (
