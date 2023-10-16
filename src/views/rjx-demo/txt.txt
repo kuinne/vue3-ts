@@ -1,0 +1,82 @@
+firstLoad -> fetchEnergyType -> energyType  -> fetchEnergyDimension -> energyDimension -> fetchEnergyObject -> energyObject
+                             -> null
+    
+changeEnergyType -> energyType -> resetEnergyDimension -> fetchEnergyDimension -> energyDimension -> resetEnergyObject -> fetchEnergyObject -> energyObject
+                                                                               -> null -> resetEnergyObject
+
+changeEnergyDimension -> energyDimension -> resetEnergyObject -> fetchEnergyObject -> energyObject
+                                                                                   -> null
+
+changeEnergyObject  -> energyObject
+
+
+
+const useFetch = <Data>(fetcher, {
+    responseHandler
+}) => {
+    const loading = ref(false)
+    const isReady = ref(false)
+    const data = ref<Data | null>(null)
+    const error = ref(null)
+    const run = await () => {
+        loading.value = true
+        data.value = null
+        error.value = null
+        try {
+            const res = await fetcher()
+            if(res){
+                data.value = responseHandler(res)
+                isReady.value = true
+            }
+        }catch(err) {
+            error.value = err
+        }
+        loading.value = false
+    }
+    return {
+        data,
+        error,
+        loading, 
+        isReady,
+        run
+    }
+}
+
+
+const useEnergyObject = () => {
+    const energyType = ref<EnergyType>(null)
+    const energyDimension = ref<EnergyDimension>(null)
+    const energyObjects = ref<EnergyObjects[]>([])
+
+    const fetchEnergyType = async () => {}
+    const fetchEnergyDimension = async (energyType: EnergyType) => {}
+    const fetchEnergyObject = async (energyType: EnergyType, energyDimension: EnergyDimension ) => {}
+
+    const {data: energyTypeList } = useFetch<EnergyType[]>(fetchEnergyType)
+    const {data: energyDimensionList } = useFetch<EnergyDimension[]>(fetchEnergyDimension)
+    const {data: energyObjectTree } = useFetch<EnergyObjects[]>(fetchEnergyObject)
+
+    const resetEnergyType = () => {
+        energyType.value = null
+    }
+    const resetEnergyDimension () => {
+        energyDimension.value = null
+    }
+    const resetEnergyObject = () => {
+        energyObjects.value = []
+    }
+
+    const onEnergyTypeChange = (value) => {
+        energyType.value = value
+    }
+    const onEnergyDimensionChange = (value) => {
+        energyDimension.value = value
+    }
+    const onEnergyObjectChange = (value) => {
+        energyObjects.value = value
+    }
+
+    const EnergyTypeTab = () => <div></div>
+    const EnergyDimension = () => <div></div>
+    const EnergyObjectTree = () => <div></div>
+}
