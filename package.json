@@ -72,6 +72,7 @@
     "@webspellchecker/wproofreader-ckeditor5": "^2.3.0",
     "ant-design-vue": "^3.2.16",
     "dayjs": "^1.11.7",
+    "docx-preview": "^0.1.20",
     "dom-to-image": "^2.6.0",
     "echarts": "^5.4.2",
     "element-plus": "^2.3.1",
@@ -80,8 +81,10 @@
     "jspdf": "^2.5.1",
     "loadsh": "^0.0.4",
     "lodash": "^4.17.21",
+    "luckyexcel": "^1.0.1",
     "mark.js": "^8.11.1",
     "nanoid": "^4.0.2",
+    "pdfjs-dist": "^3.11.174",
     "pinia": "^2.0.36",
     "rxjs": "^7.8.1",
     "spark-md5": "^3.0.2",
@@ -94,7 +97,8 @@
     "vue3-echarts": "^1.1.0",
     "vuedraggable": "^4.1.0",
     "webrtc-adapter": "^8.2.2",
-    "wproofreader": "link:@webspellchecker/wproofreader-ckeditor5/src/wproofreader"
+    "wproofreader": "link:@webspellchecker/wproofreader-ckeditor5/src/wproofreader",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.5.1",
