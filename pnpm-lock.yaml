@@ -93,6 +93,7 @@ specifiers:
   vue-tsc: ^1.8.5
   vue-webrtc: ^3.0.1
   vue3-draggable: ^2.0.9
+  vue3-draggable-resizable: ^1.6.5
   vue3-echarts: ^1.1.0
   vuedraggable: ^4.1.0
   webrtc-adapter: ^8.2.2
@@ -173,6 +174,7 @@ dependencies:
   vue-router: 4.1.6_vue@3.3.4
   vue-webrtc: 3.0.1
   vue3-draggable: 2.0.9_vue@3.3.4
+  vue3-draggable-resizable: 1.6.5
   vue3-echarts: 1.1.0
   vuedraggable: 4.1.0_vue@3.3.4
   webrtc-adapter: 8.2.2
@@ -6870,6 +6872,10 @@ packages:
       '@vue/runtime-dom': 3.3.4
       '@vue/server-renderer': 3.3.4_vue@3.3.4
       '@vue/shared': 3.3.4
+
+  /vue3-draggable-resizable/1.6.5:
+    resolution: {integrity: sha512-31142E31fGNnq3HKqvmFLSsqIbhck7TyGuQWhUKrDw6DOcGAuRx4ddRjaxvT6fe7dgeKH53qAh+i0ZlWtPLl2g==}
+    dev: false
 
   /vue3-draggable/2.0.9_vue@3.3.4:
     resolution: {integrity: sha512-OpjCSzGpkXsraBJzYrMS5LKXHThb0r+V8zItUNOZF7gZgdH0Cg2IL3XT0x4IhJdMaLvzRZCXE6UQj/459npJIw==}
