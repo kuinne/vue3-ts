@@ -9,14 +9,17 @@
 import { ref, withDefaults } from 'vue'
 import { ElInput, ElOption, ElSelect } from 'element-plus'
 import { watch } from 'vue'
-const props = withDefault(defineProps<{
-  modelValue?: {
-    productId?: string
-    productName?: string
+const props = withDefaults(
+  defineProps<{
+    modelValue?: {
+      productId?: string
+      productName?: string
+    }
+  }>(),
+  {
+    modelValue: () => ({ productId: undefined, productName: undefined }),
   }
-}>(), {
-  modelValue: () => {productId:undefined, productName: undefined}
-})
+)
 const emits = defineEmits<{
   ($event: 'update:modelValue', value: any): void
 }>()
