@@ -2,6 +2,7 @@ import { PropType, computed, defineComponent, ref, watch } from "vue";
 import styles from "./style.module.scss";
 import url from "./img.jpeg";
 import { onMounted } from "vue";
+const borderWidth = 2;
 const ImgZoom = defineComponent({
   props: {
     url: {
@@ -43,6 +44,7 @@ const ImgZoom = defineComponent({
     const boxStyle = computed(() => ({
       width: props.width + "px",
       height: props.height + "px",
+      border: `${borderWidth}px solid #ccc`,
     }));
 
     const targetBoxVisible = computed(() => props.target);
@@ -61,8 +63,8 @@ const ImgZoom = defineComponent({
     const imgRef = ref<HTMLImageElement | null>(null);
     const targetBoxRef = ref<HTMLImageElement | null>(null);
     const maskStyle = computed(() => ({
-      width: props.width / props.scale + "px",
-      height: props.height / props.scale + "px",
+      width: (props.width - 2 * borderWidth) / props.scale + "px",
+      height: (props.height - 2 * borderWidth) / props.scale + "px",
     }));
 
     const maskVisible = ref(true);
@@ -70,15 +72,18 @@ const ImgZoom = defineComponent({
     const renderMask = (x: number, y: number) => {
       if (!maskRef.value || !imgRef.value) return;
 
-      const maskWidth = props.width / props.scale;
-      const maskHeight = props.height / props.scale;
+      const contentWidth = props.width - 2 * borderWidth;
+      const contentHeight = props.height - 2 * borderWidth;
+
+      const maskWidth = parseFloat(maskStyle.value.width);
+      const maskHeight = parseFloat(maskStyle.value.height);
       // 将获取到的鼠标的值给遮罩层（减去一半是因为让鼠标在遮罩层中间）
       let maskLeft = x - maskWidth / 2;
       let maskTop = y - maskHeight / 2;
 
       // 控制 mask移动的范围
-      maskLeft = Math.min(Math.max(maskLeft, 0), props.width - maskWidth);
-      maskTop = Math.min(Math.max(maskTop, 0), props.height - maskHeight);
+      maskLeft = Math.min(Math.max(maskLeft, 0), contentWidth - maskWidth);
+      maskTop = Math.min(Math.max(maskTop, 0), contentHeight - maskHeight);
 
       maskRef.value.style.left = maskLeft + "px";
       maskRef.value.style.top = maskTop + "px";
