@@ -26,6 +26,7 @@
       <button @click="handleSwitchChannel">切换通道</button>
       <button @click="handleChangeTrack">跟踪框</button>
       <button @click="handleScreenshot">截图</button>
+      <button @click="handleScreenshot2">截图</button>
     </div>
   </div>
   <!-- 回放 -->
@@ -44,6 +45,7 @@ import { CreatePlayer } from "./player/mini-player.js";
 import decoderUrl from "./player/general/decoder.js?url";
 import { nanoid } from "nanoid";
 import domtoimage from "dom-to-image";
+import ScreenShot from "js-web-screen-shot";
 
 const video = ref<HTMLDivElement>(null);
 const videoId = nanoid();
@@ -55,6 +57,17 @@ const previewUrl = ref("");
 let player;
 
 const handlePlay = () => {
+  // const options = {
+  //   container: `#${videoId}`, // 容器
+  //   ip: deviceIp.value, // ip地址
+  //   port: 1554, // 端口
+  //   isHttps: false, // 是否是https (可选，默认为false)
+  //   chn: deviceChannel.value, // 通道
+  //   subtype: subType.value, // 1是辅码流，0 是主码流;
+  //   isPlayback: false, // 是否是回放流 (可选，默认为false)
+  //   threadNum: 4, // 多线程解码线程数,仅在开启多线程解码时有效 (可选，不填默认为4)
+  //   decoderUrl: decoderUrl, // decoder.js文件相对于项目根目录的位置（普通解码库）
+  // };
   const options = {
     container: `#${videoId}`, // 容器
     ip: deviceIp.value, // ip地址
@@ -65,7 +78,6 @@ const handlePlay = () => {
     isPlayback: false, // 是否是回放流 (可选，默认为false)
     threadNum: 4, // 多线程解码线程数,仅在开启多线程解码时有效 (可选，不填默认为4)
     decoderUrl: decoderUrl, // decoder.js文件相对于项目根目录的位置（普通解码库）
-    // decoderUrl: './player/threads/decoder.js' // decoder.js文件相对于项目根目录的位置（多线程解码库）
   };
   player = new CreatePlayer(options);
 
@@ -114,6 +126,28 @@ const handleScreenshot = () => {
   //     document.body.removeChild(elem);
   //     // document.body.removeChild(canvas);
   //   }
+};
+
+const handleScreenshot2 = () => {
+  new ScreenShot({
+    // enableWebRtc: false,
+    // imgSrc: canvas.value.toDataURL("image/png"),
+    loadCrossImg: true,
+    completeCallback: (...args: any[]) => {
+      console.log("args", args);
+      const base64 = args[0].base64;
+      const link = document.createElement("a");
+      link.download = "screenshot.png";
+      link.href = base64;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // const img = new Image();
+      // img.src = base64;
+      // document.body.appendChild(img);
+    },
+  });
 };
 </script>
 <style lang="scss" scoped>

@@ -80,6 +80,7 @@
     "file-saver": "^2.0.5",
     "html-docx-js-typescript": "^0.1.5",
     "html2canvas": "^1.4.1",
+    "js-web-screen-shot": "1.9.9-rc.5",
     "js-year-calendar": "^2.0.0",
     "jspdf": "^2.5.1",
     "loadsh": "^0.0.4",

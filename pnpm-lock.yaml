@@ -73,6 +73,7 @@ specifiers:
   html-docx-js-typescript: ^0.1.5
   html2canvas: ^1.4.1
   husky: ^8.0.0
+  js-web-screen-shot: 1.9.9-rc.5
   js-year-calendar: ^2.0.0
   jspdf: ^2.5.1
   less: ^4.2.0
@@ -165,6 +166,7 @@ dependencies:
   file-saver: 2.0.5
   html-docx-js-typescript: 0.1.5
   html2canvas: 1.4.1
+  js-web-screen-shot: 1.9.9-rc.5
   js-year-calendar: 2.0.0
   jspdf: 2.5.1
   loadsh: 0.0.4
@@ -4323,6 +4325,12 @@ packages:
 
   /js-tokens/4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
+
+  /js-web-screen-shot/1.9.9-rc.5:
+    resolution: {integrity: sha512-7KrzE/wg4YxmwTzhD3OrBSZbuHEuEWqTbED2rHad+Hp8LolYtPxbWROJ9yRB7vQS5EOfAEBNGItRCm2xV5A4JQ==}
+    dependencies:
+      html2canvas: 1.4.1
+    dev: false
 
   /js-yaml/4.1.0:
     resolution: {integrity: sha512-wpxZs9NoxZaJESJGIZTyDEaYpl0FKSA+FB9aJiyemKhMwkxQg63h4T1KJgUGHpTqPDNRcmmYLugrRjJlBtWvRA==}

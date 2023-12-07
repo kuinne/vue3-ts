@@ -1,0 +1,23 @@
+.ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.box {
+  border: 1px solid gray;
+  padding: 10px;
+  width: 300px;
+  resize: both;
+  animation: resize 0.1s infinite paused forwards;
+}
+
+.box:active {
+  animation-play-state: running;
+}
+
+@keyframes resize {
+  to {
+    opacity: 1;
+  }
+}

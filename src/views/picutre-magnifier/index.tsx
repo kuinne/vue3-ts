@@ -1,16 +1,15 @@
 import { PropType, computed, defineComponent, ref, watch } from "vue";
 import styles from "./style.module.scss";
 import url from "./img.jpeg";
+import fullImageUrl from "./08_2023-11-27 16_23_38.jpeg";
 import { onMounted } from "vue";
+import { nextTick } from "vue";
 const borderWidth = 2;
 const ImgZoom = defineComponent({
   props: {
     url: {
       type: String,
       required: true,
-    },
-    zoomUrl: {
-      type: String,
     },
     width: {
       type: Number,
@@ -30,30 +29,28 @@ const ImgZoom = defineComponent({
       >,
       default: "contain",
     },
-    target: {
+    rect: {
       type: Object as PropType<{
-        top: number;
-        left: number;
-        width: number;
-        height: number;
+        Left: number;
+        Right: number;
+        Top: number;
+        Bottom: number;
       }>,
+      required: true,
     },
   },
   setup(props) {
-    const zoomUrl = computed(() => props.zoomUrl || props.url);
     const boxStyle = computed(() => ({
       width: props.width + "px",
       height: props.height + "px",
       border: `${borderWidth}px solid #ccc`,
     }));
-
-    const targetBoxVisible = computed(() => props.target);
-    const targetBoxStyle = computed(() => ({
-      top: (props.target?.top || 0) + "px",
-      left: (props.target?.left || 0) + "px",
-      width: (props.target?.width || 0) + "px",
-      height: (props.target?.height || 0) + "px",
-    }));
+    const targetBoxStyle = ref({
+      top: 0 + "px",
+      left: 0 + "px",
+      width: 0 + "px",
+      height: 0 + "px",
+    });
 
     const imgStyle = computed(() => ({
       objectFit: props.fitMode,
@@ -66,8 +63,6 @@ const ImgZoom = defineComponent({
       width: (props.width - 2 * borderWidth) / props.scale + "px",
       height: (props.height - 2 * borderWidth) / props.scale + "px",
     }));
-
-    const maskVisible = ref(true);
 
     const renderMask = (x: number, y: number) => {
       if (!maskRef.value || !imgRef.value) return;
@@ -92,20 +87,56 @@ const ImgZoom = defineComponent({
       imgRef.value.style.left = `-${maskLeft * props.scale}px`;
     };
 
-    const initStyle = () => {
-      if (!boxRef.value || !maskRef.value || !targetBoxRef.value) return;
+    const initMaskStyle = async () => {
+      if (!targetBoxRef.value) {
+        await new Promise((r) => {
+          watch(targetBoxRef, () => {
+            if (targetBoxRef.value) {
+              r("");
+            }
+          });
+        });
+      }
 
       const { offsetWidth, offsetHeight, offsetLeft, offsetTop } =
-        targetBoxRef.value;
+        targetBoxRef.value!;
 
       const x = offsetLeft + offsetWidth / 2;
       const y = offsetTop + offsetHeight / 2;
+
       renderMask(x, y);
     };
+    const initTargetBoxStyle = (image: HTMLImageElement) => {
+      const originRect = props.rect;
+      const factor = 8192;
 
-    const handleMouseover = (e: MouseEvent) => {
-      maskVisible.value = true;
+      const rect = {
+        left: originRect.Left / factor,
+        top: originRect.Top / factor,
+        width: (originRect.Right - originRect.Left) / factor,
+        height: (originRect.Bottom - originRect.Top) / factor,
+      };
+      const scale = image.naturalWidth / props.width;
+      const imageWidth = image.naturalWidth / scale;
+      const imageHeight = image.naturalHeight / scale;
+      // @ts-ignore
+      targetBoxStyle.value = Object.entries(rect).reduce(
+        (acc, [key, value]) => {
+          if (["top", "height"].includes(key)) {
+            // @ts-ignore
+            acc[key] = `${value * imageHeight}px`;
+          }
+          if (["left", "width"].includes(key)) {
+            // @ts-ignore
+            acc[key] = `${value * imageWidth}px`;
+          }
+          return acc;
+        },
+        {}
+      );
     };
+
+    const handleMouseover = (e: MouseEvent) => {};
 
     const handleMousemove = (e: MouseEvent) => {
       if (!boxRef.value || !maskRef.value || !imgRef.value) return;
@@ -121,9 +152,30 @@ const ImgZoom = defineComponent({
       if (!imgRef.value) return;
     };
 
-    onMounted(() => {
-      initStyle();
-    });
+    const getImageInfo = (): Promise<HTMLImageElement> => {
+      return new Promise((resolve) => {
+        const image = new Image();
+        image.onload = () => {
+          resolve(image);
+        };
+        image.src = props.url;
+      });
+    };
+
+    watch(
+      () => props.url,
+      async () => {
+        if (props.url) {
+          const image = await getImageInfo();
+          initTargetBoxStyle(image);
+          await nextTick();
+          initMaskStyle();
+        }
+      },
+      {
+        immediate: true,
+      }
+    );
 
     return () => (
       <div class={styles["container"]}>
@@ -143,13 +195,12 @@ const ImgZoom = defineComponent({
           ></div>
           <div
             class={styles["target-box"]}
-            v-show={targetBoxVisible.value}
             style={targetBoxStyle.value}
             ref={targetBoxRef}
           ></div>
         </div>
         <div class={[styles["box"], styles["big"]]} style={boxStyle.value}>
-          <img src={zoomUrl.value} ref={imgRef} style={imgStyle.value} />
+          <img src={props.url} ref={imgRef} style={imgStyle.value} />
         </div>
       </div>
     );
@@ -161,17 +212,25 @@ export default defineComponent({
     return () => (
       <>
         <ImgZoom
-          url={
-            "https://cdn.pixabay.com/photo/2014/11/30/14/11/cat-551554_1280.jpg"
-          }
-          fitMode="fill"
-          width={400}
-          height={400}
-          target={{
-            top: 100,
-            left: 180,
-            width: 110,
-            height: 100,
+          url={fullImageUrl}
+          width={520}
+          height={292.5}
+          rect={{
+            Left: 6528,
+            Top: 3898,
+            Right: 6946,
+            Bottom: 4596,
+          }}
+        />
+        <ImgZoom
+          url={"http://172.168.70.9/v1/image/data?id=2390986&type=0"}
+          width={520}
+          height={292.5}
+          rect={{
+            Left: 913,
+            Top: 2867,
+            Right: 1143,
+            Bottom: 3868,
           }}
         />
       </>
