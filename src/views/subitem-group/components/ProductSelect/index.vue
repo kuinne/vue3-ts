@@ -6,6 +6,7 @@
 </template>
 
 <script setup lang="ts">
+<<<<<<< HEAD
 import { ref, withDefaults } from "vue";
 import { ElInput, ElOption, ElSelect } from "element-plus";
 import { watch } from "vue";
@@ -17,6 +18,22 @@ const props = withDefault(
     };
   }>()
 );
+=======
+import { ref, withDefaults } from 'vue'
+import { ElInput, ElOption, ElSelect } from 'element-plus'
+import { watch } from 'vue'
+const props = withDefaults(
+  defineProps<{
+    modelValue?: {
+      productId?: string
+      productName?: string
+    }
+  }>(),
+  {
+    modelValue: () => ({ productId: undefined, productName: undefined }),
+  }
+)
+>>>>>>> 379adb35817a517f94be141e463cc91960a6ad67
 const emits = defineEmits<{
   ($event: "update:modelValue", value: any): void;
 }>();

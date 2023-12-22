@@ -2,9 +2,9 @@ import { cloneDeep, pick } from 'lodash'
 import { Ref, computed, defineComponent, ref, watch } from 'vue'
 import SubitemGroup from './components/SubitemGroup/index.vue'
 import ProductSelect from './components/ProductSelect/index.vue'
-import TestInput from './components/TestInput/index.vue'
+import ParameterValue from './components/ParameterValue/index.vue'
 import DeviceSelect from './components/DeviceSelect'
-import { ElInput, ElOption, ElSelect } from 'element-plus'
+import { ElButton, ElInput, ElOption, ElSelect } from 'element-plus'
 type Product = {
   productId?: string
   productName?: string
@@ -44,6 +44,19 @@ export default defineComponent({
       }
     )
 
+    const validateRefs = ref<any>({})
+
+    const setValidateRefs = (key: any) => (ref: any) => {
+      if (ref) {
+        validateRefs.value[key] = ref
+      }
+    }
+
+    const validate = () => {
+      for (let [key, ref] of Object.entries(validateRefs.value)) {
+        ref?.validate?.()
+      }
+    }
     function group<T = any>(value: any, keys: string[]): Ref<T> {
       return computed({
         get() {
@@ -56,69 +69,54 @@ export default defineComponent({
     }
 
     return () => (
-      <SubitemGroup
-        v-model={data.value}
-        defaultItem={defaultItem.value}
-        // @ts-ignore
-        defaultSubitem={(item) => defaultSubitem.value[item.type]}
-      >
-        {{
-          default: ({ item }: any) => (
-            <>
-              <ElSelect
-                v-model={item.type}
-                onChange={() => {
-                  // @ts-ignore
-                  item.args = [cloneDeep(defaultSubitem.value[item.type])]
-                }}
-              >
-                <ElOption value="product" label="产品"></ElOption>
-                <ElOption value="device" label="设备"></ElOption>
-              </ElSelect>
-              {item.type === 'product' ? (
-                <ProductSelect
-                  v-model={
-                    group<Product>(item, ['productId', 'productName']).value
-                  }
-                />
-              ) : null}
-              {item.type === 'device' ? (
-                <ElSelect v-model={item.deviceId}>
-                  <ElOption value="1" label="设备1"></ElOption>
-                  <ElOption value="2" label="设备2"></ElOption>
+      <>
+        <ElButton onClick={validate}>提交</ElButton>
+        <SubitemGroup
+          v-model={data.value}
+          defaultItem={defaultItem.value}
+          // @ts-ignore
+          defaultSubitem={(item) => defaultSubitem.value[item.type]}
+        >
+          {{
+            default: ({ item, index }: any) => (
+              <>
+                <ElSelect
+                  v-model={item.type}
+                  onChange={() => {
+                    // @ts-ignore
+                    item.args = [cloneDeep(defaultSubitem.value[item.type])]
+                  }}
+                >
+                  <ElOption value="product" label="产品"></ElOption>
+                  <ElOption value="device" label="设备"></ElOption>
                 </ElSelect>
-              ) : null}
-              <DeviceSelect
-                v-model={group(item, ['deviceId', 'deviceName']).value}
-              />
-              <input v-model={item.deviceId} />
-              <ElInput v-model={item.deviceId}></ElInput>
-              <TestInput v-model={item.deviceId}></TestInput>
-              <ElSelect v-model={item.deviceId}></ElSelect>
-            </>
-          ),
-          subitem: ({ subitem, item }: any) => (
-            <>
-              <ElSelect v-model={subitem.parameterId}>
-                <ElOption value="1" label="属性1"></ElOption>
-                <ElOption value="2" label="属性2"></ElOption>
-              </ElSelect>
-              {item.type === 'product' ? (
-                <ElInput
-                  style="width:200px"
+                {item.type === 'product' ? (
+                  <ProductSelect
+                    v-model={
+                      group<Product>(item, ['productId', 'productName']).value
+                    }
+                  />
+                ) : null}
+                <DeviceSelect
+                  v-model={group(item, ['deviceId', 'deviceName']).value}
+                />
+              </>
+            ),
+            subitem: ({ subitem, subindex, item, index }: any) => (
+              <>
+                <ElSelect v-model={subitem.parameterId}>
+                  <ElOption value="1" label="属性1"></ElOption>
+                  <ElOption value="2" label="属性2"></ElOption>
+                </ElSelect>
+                <ParameterValue
                   v-model={subitem.parameterValue}
-                ></ElInput>
-              ) : null}
-              {item.type === 'device' ? (
-                <ElInput
-                  style="width:200px"
-                  v-model={subitem.parameterValue2}
-                ></ElInput>
-              ) : null}
-            </>
-          ),
-        }}
-      </SubitemGroup>
+                  ref={setValidateRefs(`parentValue${index}${subindex}`)}
+                />
+              </>
+            ),
+          }}
+        </SubitemGroup>
+      </>
     )
   },
 })
