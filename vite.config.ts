@@ -11,12 +11,19 @@ export default defineConfig({
   plugins: [
     vue(),
     vueJsx(),
-    ckeditor5({ theme: require.resolve("@ckeditor/ckeditor5-theme-lark") }),
+    // ckeditor5({ theme: require.resolve("@ckeditor/ckeditor5-theme-lark") }),
     Icons({
       /* options */
     }),
   ],
+  optimizeDeps: {
+    exclude: ["@ffmpeg/ffmpeg", "@ffmpeg/util"],
+  },
   server: {
+    headers: {
+      "Cross-Origin-Opener-Policy": "same-origin",
+      "Cross-Origin-Embedder-Policy": "require-corp",
+    },
     host: "0.0.0.0",
   },
 });
