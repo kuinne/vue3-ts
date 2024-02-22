@@ -108,7 +108,8 @@
     "vuedraggable": "^4.1.0",
     "webrtc-adapter": "^8.2.2",
     "wproofreader": "link:@webspellchecker/wproofreader-ckeditor5/src/wproofreader",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "zrender": "^5.5.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.5.1",

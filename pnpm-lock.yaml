@@ -110,6 +110,7 @@ specifiers:
   webrtc-adapter: ^8.2.2
   wproofreader: link:@webspellchecker/wproofreader-ckeditor5/src/wproofreader
   xlsx: ^0.18.5
+  zrender: ^5.5.0
 
 dependencies:
   '@ckeditor/ckeditor5-alignment': 38.0.1
@@ -200,6 +201,7 @@ dependencies:
   webrtc-adapter: 8.2.2
   wproofreader: link:@webspellchecker/wproofreader-ckeditor5/src/wproofreader
   xlsx: 0.18.5
+  zrender: 5.5.0
 
 devDependencies:
   '@commitlint/cli': 17.5.1
@@ -7370,6 +7372,12 @@ packages:
 
   /zrender/5.4.3:
     resolution: {integrity: sha512-DRUM4ZLnoaT0PBVvGBDO9oWIDBKFdAVieNWxWwK0niYzJCMwGchRk21/hsE+RKkIveH3XHCyvXcJDkgLVvfizQ==}
+    dependencies:
+      tslib: 2.3.0
+    dev: false
+
+  /zrender/5.5.0:
+    resolution: {integrity: sha512-O3MilSi/9mwoovx77m6ROZM7sXShR/O/JIanvzTwjN3FORfLSr81PsUGd7jlaYOeds9d8tw82oP44+3YucVo+w==}
     dependencies:
       tslib: 2.3.0
     dev: false
