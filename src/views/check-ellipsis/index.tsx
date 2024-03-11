@@ -1,6 +1,6 @@
-import { defineComponent, onMounted, ref, watch } from "vue";
+import { defineComponent, onMounted, ref, watch, withDirectives } from "vue";
 import styles from "./style.module.scss";
-
+import vTextTooltip from "./directive";
 const getPadding = (el: HTMLElement) => {
   const _style = window.getComputedStyle(el, null);
   const paddingLeft = Number.parseInt(_style.paddingLeft, 10) || 0;
@@ -17,6 +17,9 @@ const getPadding = (el: HTMLElement) => {
 
 export default defineComponent({
   setup() {
+    const content = ref(
+      "Lorem ipsum dolor sit amet consectetur adipisicing elit. Quidem earum impedit numquam, sint tenetur non placeat nulla rerum, sunt distinctio dicta ratione nesciunt quam, minima sequi maxime expedita nostrum illum."
+    );
     const box = ref<HTMLDivElement | null>(null);
     const result = ref();
 
@@ -40,6 +43,18 @@ export default defineComponent({
       }
     };
 
+    const checkMultipleEllipsis = (el: HTMLDivElement) => {
+      const isTruncated = (el) => {
+        return el.scrollHeight > el.clientHeight;
+      };
+
+      if (isTruncated(el)) {
+        result.value = "存在省略号";
+      } else {
+        result.value = "容器宽度足够，没有省略号了";
+      }
+    };
+
     watch(box, () => {
       if (!box.value) return;
 
@@ -50,19 +65,36 @@ export default defineComponent({
 
       box.value.addEventListener("resize", () => {
         if (!box.value) return;
-        checkEllipsis(box.value);
+        // checkEllipsis(box.value);
+        checkMultipleEllipsis(box.value);
       });
     });
 
     return () => (
-      <>
-        <div class={[styles["ellipsis"], styles["box"]]} ref={box}>
+      <div class={styles["page"]}>
+        <div class={styles["wrapper"]}>
+          {/* <div class={[styles["ellipsis"], styles["box"]]} ref={box}>
           Lorem ipsum, dolor sit amet consectetur adipisicing elit.
           <span style="font-size: large;">hello world</span>
           <span style="letter-spacing: 20px">hello world</span>
+        </div> */}
+          {/* <div class={[styles["multiple-ellipsis"], styles["box"]]} ref={box}>
+          Lorem ipsum dolor sit amet consectetur adipisicing elit. Quidem earum
+          impedit numquam, sint tenetur non placeat nulla rerum, sunt distinctio
+          dicta ratione nesciunt quam, minima sequi maxime expedita nostrum
+          illum.
+        </div> */}
+          {withDirectives(
+            <div class={[styles["box"]]} ref={box}>
+              {content.value}
+            </div>,
+            [[vTextTooltip, { line: 4 }]]
+          )}
+          <textarea v-model={content.value}></textarea>
+
+          <div>{result.value}</div>
         </div>
-        <div>{result.value}</div>
-      </>
+      </div>
     );
   },
 });
