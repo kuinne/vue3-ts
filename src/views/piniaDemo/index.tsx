@@ -1,4 +1,4 @@
-import { defineComponent } from "vue";
+import { defineComponent, onMounted, onUnmounted } from "vue";
 import { useCounterStore } from "./store/counter";
 import { storeToRefs } from "pinia";
 
@@ -41,6 +41,10 @@ export default defineComponent({
     const register = () => {
       store.registerUser();
     };
+
+    onUnmounted(() => {
+      store.$reset();
+    });
     return () => (
       <div>
         <div>name: {name.value}</div>
