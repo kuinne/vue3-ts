@@ -13,7 +13,12 @@ import {
   calculateMaxNodes,
   findClosestConfig,
   genTree,
-  treeToList,
+  flattenTree,
+  getNodeAndDescendantIdsFromFlat,
+  getPathToRootFromArray,
+  getPathToRootFromMap,
+  flattenTreeToMap,
+  getNodeAndDescendantIdsFromMap
 } from "./utils";
 import { FunctionalComponent, nextTick } from "vue";
 
@@ -33,10 +38,8 @@ type SelectionCellProps = {
   onChange: (value: CheckboxValueType) => void;
 };
 
-const level = 6;
-const n = 6;
-
-const checkStrictly = true;
+const level = 4;
+const n = 8;
 
 const SelectionCell: FunctionalComponent<SelectionCellProps> = ({
   value,
@@ -55,12 +58,13 @@ const SelectionCell: FunctionalComponent<SelectionCellProps> = ({
 export default defineComponent({
   setup() {
     const tableRef = ref<any>();
-    const data = ref<any[]>([]);
-    const keyword = ref("");
-    // const selectionIds.value = ref<string[]>([]);
-    const selectionIds = ref<string[]>([]);
+    const treeData = ref<any[]>([]);
+    let flattenTreeMap: Map<string, any> = new Map()
+    const selectedKeys = ref<Set<string>>(new Set([]));
 
-    let allIds: string[] = [];
+    const keyword = ref("");
+
+    let allKeys: string[] = [];
 
     const expandedRowKeys = ref<string[]>([]);
 
@@ -75,60 +79,38 @@ export default defineComponent({
     );
 
     watch(
-      selectionIds.value,
+      selectedKeys.value,
       () => {
-        console.log("selectionIds.value", selectionIds.value);
+        console.log("selectedKeys.value", selectedKeys.value);
       },
       {
         deep: true,
       }
     );
 
-    const load = (
-      row: User,
-      treeNode: unknown,
-      resolve: (data: User[]) => void
-    ) => {
-      setTimeout(() => {
-        resolve(
-          Array.from({ length: 10 })
-            .fill(0)
-            .map((item, index) => ({
-              id: `${row.id}-${index + 1}`,
-              date: "2016-05-02",
-              name: `${row.name} - ${index + 1}`,
-              address: "No. 189, Grove St, Los Angeles",
-              hasChildren: index % 2 === 0,
-            }))
-        );
-      }, 1000);
-    };
-
-    const deepChecked = (row: any, checked: boolean) => {
-      row.checked = checked;
+    const select = (row: any, checked: boolean) => {
+      const keys = getNodeAndDescendantIdsFromMap(flattenTreeMap, row.id);
       if (checked) {
-        if (!selectionIds.value.includes(row.id)) {
-          selectionIds.value.push(row.id);
-        }
+        keys.forEach((key) => {
+          selectedKeys.value.add(key);
+        });
       } else {
-        const index = selectionIds.value.findIndex((i) => i === row.id);
-
-        if (index > -1) {
-          selectionIds.value.splice(index, 1);
-        }
-      }
-
-      if (!checkStrictly) return;
-
-      for (let item of row.children || []) {
-        deepChecked(item, checked);
+        keys.forEach((key) => {
+          selectedKeys.value.delete(key);
+        });
       }
     };
 
-    const isAllChecked = (list: any[]): boolean => {
-      return list.every(
-        (i) => selectionIds.value.includes(i.id) && isAllChecked(i.children)
-      );
+    const selectAll = (checked: boolean) => {
+      if (checked) {
+        allKeys.forEach((key) => {
+          selectedKeys.value.add(key);
+        });
+      } else {
+        allKeys.forEach((key) => {
+          selectedKeys.value.delete(key);
+        });
+      }
     };
 
     const columns = computed(() => [
@@ -137,17 +119,23 @@ export default defineComponent({
         width: 50,
         cellRenderer: ({ rowData }) => {
           const onChange = (value: CheckboxValueType) => {
-            deepChecked(rowData, value);
+            select(rowData, value);
           };
-          return <SelectionCell value={rowData.checked} onChange={onChange} />;
+          return (
+            <SelectionCell
+              value={!!selectedKeys.value.has(rowData.id)}
+              onChange={onChange}
+            />
+          );
         },
 
         headerCellRenderer: () => {
           const onChange = (value: CheckboxValueType) => {
-            data.value.map((i) => deepChecked(i, value));
+            selectAll(value);
           };
-          const allSelected = isAllChecked(data.value);
-          const containsChecked = selectionIds.value.length > 0;
+
+          const allSelected = !!(allKeys.length === selectedKeys.value.size);
+          const containsChecked = selectedKeys.value.size > 0;
 
           return (
             <SelectionCell
@@ -165,14 +153,9 @@ export default defineComponent({
         width: 150,
         // cellRenderer: ({ rowData }) => {
         //   return (
-        //     <div>
-        //       {!rowData.leaf ? (
-        //         <el-icon>
-        //           <ArrowRight />
-        //         </el-icon>
-        //       ) : null}
+        //     <span id={rowData.id}>
         //       {rowData.name}
-        //     </div>
+        //     </span>
         //   );
         // },
       },
@@ -185,50 +168,98 @@ export default defineComponent({
     ]);
 
     const getData = () => {
-      data.value = [];
+      treeData.value = [];
       let total = calculateMaxNodes(level, n);
       console.log("total", total);
 
-      // if (total >= 600) return;
-      data.value = genTree(level, n, (node) => ({
+      const res = genTree(level, n, (node) => ({
         ...node,
-        leaf: false,
       }));
-      allIds = treeToList(data.value).map((i) => i.id);
-      // console.log("data", data.value);
+      treeData.value = res;
+      flattenTreeMap = flattenTreeToMap(res);
+      for(let node of res) {
+        flattenTreeMap.set(node.id, {...flattenTreeMap.get(node.id), visible: true})
+      }
+      console.log('flattenTreeMap',flattenTreeMap);
+      
+      allKeys = Array.from(flattenTreeMap.keys())
     };
 
-    const handleSelectionChange = (selections: User[]) => {
-      // selectionRows.value = selections;
-      // console.log("selectionRows", selectionRows.value.length);
-    };
-
-    const handleRowExpand = (expanded: boolean, rowKey: string) => {
+    const handleRowExpand = ({expanded, rowKey}: {expanded: boolean, rowKey: string}) => {
       console.log("expanded", expanded, rowKey);
+      const node = flattenTreeMap.get(rowKey)
+      node.children.forEach(child => {
+        flattenTreeMap.set(child.id, {
+          ...flattenTreeMap.get(child.id),
+          visible: expanded
+        })
+
+      })
     };
 
-    // console.log(calculateMaxNodes(level, n))
-
-    console.log(findClosestConfig(5000));
+    // console.log(findClosestConfig(5000));
 
     getData();
 
     const reset = () => {};
 
     const expandAll = () => {
-      expandedRowKeys.value = allIds;
+      expandedRowKeys.value = allKeys;
+      allKeys.forEach(key => {
+        const node = flattenTreeMap.get(key)
+        flattenTreeMap.set(key, {...node, visible: true})
+      })
     };
-    const selectAll = () => {};
 
     const deleteRows = () => {};
 
-    const expandLast = () => {
-      expandedRowKeys.value = ["1", "11", "111", "1118"];
-      // console.log("tableRef", tableRef.value?.scrollToRow);
-      nextTick(() => {
-        tableRef.value?.scrollToRow("1118");
-      });
+    
+
+
+
+    const expandLast = async () => {
+
+      let rowHeight = 50
+      let targetKey = '6_1_4_1'
+      let path = flattenTreeMap.get(targetKey).path.split('/')
+      console.log('parentsKeys',path);
+
+
+      expandedRowKeys.value = [...new Set([...expandedRowKeys.value, ...path.slice(0, path.length - 1)])]
+
+      for(let p of path.slice(1)) {
+        const node = flattenTreeMap.get(p)
+        flattenTreeMap.set(p, {
+          ...node,
+          visible: true
+        })
+        for(let c of node.children) {
+          flattenTreeMap.set(c.id, {
+            ...flattenTreeMap.get(c.id),
+            visible: true
+          })
+        }
+      }
+
+      const target = flattenTreeMap.get(targetKey)
+
+      const visibleNodes = Array.from(flattenTreeMap.values()).filter(i => i.visible && i.weight < target.weight)
+      console.log('visibleNodes', visibleNodes, target);
+      
+      
+
+
+      
+
+      const scrollTop = (visibleNodes.length - 1) * rowHeight
+      
+      tableRef.value?.scrollToTop(scrollTop)
+
+
+      
     };
+
+
 
     return () => (
       <div>
@@ -241,45 +272,20 @@ export default defineComponent({
           <ElInput v-model={keyword.value} width={200} />
         </div>
         <div style="height: 500px; width: 900px; resize: both;overflow: scroll; border: 1px solid black;">
-          {/* <ElTable
-          data={data.value}
-          rowKey="id"
-          // lazy
-          // load={load}
-          treeProps={{
-            children: "children",
-            hasChildren: "leaf",
-            checkStrictly: false,
-          }}
-          height="100%"
-          onSelectionChange={handleSelectionChange}
-        >
-          <ElTableColumn type="selection" width="55" />
-
-          <ElTableColumn type="expand">
-            {{
-              default: (props: any) => <div>ssss</div>,
-            }}
-          </ElTableColumn>
-          <ElTableColumn prop="name" label="Name" />
-          <ElTableColumn prop="date" label="Date" />
-
-          <ElTableColumn prop="address" label="Address" />
-        </ElTable>
-        <ElTree data={data.value} /> */}
           <ElAutoResizer>
             {{
               default: ({ height, width }: any) => (
                 <ElTableV2
                   ref={tableRef}
                   columns={columns.value}
-                  data={data.value}
+                  data={treeData.value}
                   rowKey="id"
                   width={width}
                   height={height}
                   expandColumnKey="name"
                   onRowExpand={handleRowExpand}
                   v-model:expandedRowKeys={expandedRowKeys.value}
+                  
                 ></ElTableV2>
               ),
             }}

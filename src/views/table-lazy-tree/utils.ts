@@ -11,13 +11,14 @@ export function calculateMaxNodes(level: number, n: number) {
 export function genTree(level: number, n: number, cb: (node: any) => any) {
   const fn = (l: number, parent?: any) => {
     return Array.from({ length: n }).map((item, index) => {
+      const id = parent? `${parent?.id || ""}_${index + 1}`: `${index + 1}`
       const node: any = {
         parentId: parent?.id || null,
-        id: `${parent?.id || ""}${index + 1}`,
-        name: `${parent?.id || ""}${index + 1}`,
+        id,
+        name: id,
         level: l,
         leaf: l === level,
-        path: parent ? `${parent.path}/${index + 1}` : `${index + 1}`,
+        path: parent ? `${parent.path}/${id}` : `${id}`,
       };
       node.children = l === level ? [] : fn(l + 1, node);
       return {
@@ -78,17 +79,176 @@ export function findClosestConfig(targetNodes: number) {
   return { closestLevel, closestN, closestNodes };
 }
 
-export const treeToList = (tree: any[]) => {
-  const res: any[] = [];
 
-  const fn = (list: any[]) => {
-    for (let item of list) {
-      res.push(item);
-      fn(item.children);
+export function flattenTree(tree: any[], childrenKey = "children") {
+  const result = [];
+  const stack = tree.slice(0);
+
+  while (stack.length > 0) {
+    const node = stack.pop();
+    result.push(node);
+
+    // Check for children and push them onto the stack in reverse order
+    if (node[childrenKey]) {
+      stack.push(...node[childrenKey].reverse());
     }
-  };
+  }
 
-  fn(tree);
+  return result;
+}
+// export function flattenTreeToMap<T = any>(tree: T[], idKey = 'id', childrenKey = "children") {
+//   const resultMap = new Map();
+//   const stack = [...tree]
 
-  return res;
-};
+//   while (stack.length > 0) {
+//     const node: any = stack.pop();
+//     resultMap.set(node[idKey], node)
+
+//     // Check for children and push them onto the stack in reverse order
+//     if (node[childrenKey]) {
+//       for (let i = node[childrenKey].length - 1; i >= 0; i--) {
+//         stack.push(node[childrenKey][i]);
+//     }
+//     }
+//   }
+
+//   return resultMap;
+// }
+
+export function flattenTreeToMap(tree: any[], idKey = 'id', childrenKey = 'children') {
+  const resultMap = new Map();
+  const stack = [{ nodes: tree, parentWeight: 0, depth: 0 }];
+
+  while (stack.length > 0) {
+    const { nodes, parentWeight, depth } = stack.shift();
+
+    // Initialize a variable to keep track of the sum of weights of previous siblings
+    let precedingSiblingWeightsSum = 0;
+
+    for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i];
+
+        // Calculate the weight based on depth, parent's weight, and sum of preceding siblings' weights
+        const weight = depth + parentWeight + precedingSiblingWeightsSum;
+
+        // Create a new node object with index and weight
+        const nodeWithWeight = { ...node, indexInParent: i, weight };
+
+        resultMap.set(node[idKey], nodeWithWeight);
+
+        // Update the sum of weights for the next sibling
+        precedingSiblingWeightsSum += weight; // Add current node's weight to the sum
+
+        // If the node has children, push them to the stack with updated depth and parent's weight
+        if (node[childrenKey]) {
+            stack.push({ nodes: node[childrenKey], parentWeight: weight, depth: depth + 1 });
+        }
+    }
+}
+  return resultMap;
+}
+
+export function getNodeAndDescendantIdsFromFlat(
+  flatTree: any[],
+  targetId: string,
+  idKey = "id",
+  parentIdKey = "parentId"
+) {
+  // Step 1: Build a map of parentId -> child nodes
+  const parentMap = new Map();
+
+  for (const node of flatTree) {
+    const parentId = node[parentIdKey];
+    if (!parentMap.has(parentId)) {
+      parentMap.set(parentId, []);
+    }
+    parentMap.get(parentId).push(node[idKey]);
+  }
+
+  // Step 2: Collect target node and descendants using BFS
+  const result = [];
+  const queue = [targetId];
+
+  while (queue.length > 0) {
+    const currentId = queue.shift();
+    result.push(currentId);
+
+    // Add children of the current node to the queue
+    if (parentMap.has(currentId)) {
+      queue.push(...parentMap.get(currentId));
+    }
+  }
+
+  return result;
+}
+
+export function getNodeAndDescendantIdsFromMap(flatTreeMap: Map<string, any>, targetId: string, idKey = 'id', parentIdKey = 'parentId') {
+  // Step 1: Build a parent-child map from the Map-based flat tree
+  const parentMap = new Map();
+  
+  for (const [nodeId, node] of flatTreeMap.entries()) {
+      const parentId = node[parentIdKey];
+      if (!parentMap.has(parentId)) {
+          parentMap.set(parentId, []);
+      }
+      parentMap.get(parentId).push(nodeId);
+  }
+
+  // Step 2: Collect target node and descendants using BFS
+  const result = [];
+  const queue = [targetId];
+
+  while (queue.length > 0) {
+      const currentId = queue.shift();
+      result.push(currentId);
+      
+      // Add children of the current node to the queue
+      if (parentMap.has(currentId)) {
+          queue.push(...parentMap.get(currentId));
+      }
+  }
+
+  return result;
+}
+
+
+
+export function getPathToRootFromArray(flatTree: any[], targetId: string, idKey = 'id', parentIdKey = 'parentId') {
+  // Step 1: Build a Map for quick lookup of nodes by id
+  const nodeMap = new Map(flatTree.map(node => [node[idKey], node]));
+  
+  // Step 2: Collect path from target node to the root
+  const path = [];
+  let currentId = targetId;
+
+  while (nodeMap.has(currentId)) {
+      const node = nodeMap.get(currentId);
+      path.push(node[idKey]);
+      
+      // Move up to the parent node
+      currentId = node[parentIdKey];
+      
+      // Stop if we've reached a root node (parentId is null or undefined)
+      if (currentId == null) break;
+  }
+
+  return path;
+}
+
+export function getPathToRootFromMap(flatTreeMap: Map<string, any>, targetId: string, idKey = 'id', parentIdKey = 'parentId') {
+  const path = [];
+  let currentId = targetId;
+
+  while (flatTreeMap.has(currentId)) {
+      const node = flatTreeMap.get(currentId);
+      path.push(node[idKey]);
+      
+      // Move up to the parent node
+      currentId = node[parentIdKey];
+      
+      // Stop if we've reached a root node (parentId is null or undefined)
+      if (currentId == null) break;
+  }
+
+  return path;
+}
