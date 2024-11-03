@@ -1,17 +1,17 @@
 export function calculateMaxNodes(level: number, n: number) {
-  let maxNodes = 0;
+  let maxNodes = 0
 
   for (let i = 0; i <= level; i++) {
-    maxNodes += Math.pow(n, i);
+    maxNodes += Math.pow(n, i)
   }
 
-  return maxNodes - 1;
+  return maxNodes - 1
 }
 
 export function genTree(level: number, n: number, cb: (node: any) => any) {
   const fn = (l: number, parent?: any) => {
     return Array.from({ length: n }).map((item, index) => {
-      const id = parent? `${parent?.id || ""}_${index + 1}`: `${index + 1}`
+      const id = parent ? `${parent?.id || ''}_${index + 1}` : `${index + 1}`
       const node: any = {
         parentId: parent?.id || null,
         id,
@@ -19,236 +19,226 @@ export function genTree(level: number, n: number, cb: (node: any) => any) {
         level: l,
         leaf: l === level,
         path: parent ? `${parent.path}/${id}` : `${id}`,
-      };
-      node.children = l === level ? [] : fn(l + 1, node);
+      }
+      node.children = l === level ? [] : fn(l + 1, node)
       return {
         ...node,
         ...cb(node),
-      };
-    });
-  };
+      }
+    })
+  }
 
-  return fn(1, null);
+  return fn(1, null)
 }
 
 export function getSubTree(parent: any, n: number) {
-  const l = parent.level + 1;
+  const l = parent.level + 1
   return Array.from({ length: n }).map((item, index) => {
     const node: any = {
       parentId: parent?.id || null,
-      id: `${parent?.id || ""}${index + 1}`,
-      name: `${parent?.id || ""}${index + 1}`,
+      id: `${parent?.id || ''}${index + 1}`,
+      name: `${parent?.id || ''}${index + 1}`,
       level: l,
       leaf: false,
       children: [],
-    };
-    return node;
-  });
+    }
+    return node
+  })
 }
 
 export function findClosestConfig(targetNodes: number) {
-  let closestNodes = 0;
-  let closestLevel = 0;
-  let closestN = 0;
+  let closestNodes = 0
+  let closestLevel = 0
+  let closestN = 0
 
   // 遍历可能的 level 和 n 值，范围设置为合理的猜测
   for (let level = 1; level <= 10; level++) {
     for (let n = 2; n <= 10; n++) {
-      let maxNodes = 0;
+      let maxNodes = 0
 
       for (let i = 0; i <= level; i++) {
-        maxNodes += Math.pow(n, i);
+        maxNodes += Math.pow(n, i)
       }
 
       // 检查是否更接近目标节点数
       if (
         Math.abs(targetNodes - maxNodes) < Math.abs(targetNodes - closestNodes)
       ) {
-        closestNodes = maxNodes;
-        closestLevel = level;
-        closestN = n;
+        closestNodes = maxNodes
+        closestLevel = level
+        closestN = n
       }
 
       // 如果已精确匹配目标节点数，则返回
       if (closestNodes === targetNodes) {
-        return { closestLevel, closestN, closestNodes };
+        return { closestLevel, closestN, closestNodes }
       }
     }
   }
 
-  return { closestLevel, closestN, closestNodes };
+  return { closestLevel, closestN, closestNodes }
 }
 
-
-export function flattenTree(tree: any[], childrenKey = "children") {
-  const result = [];
-  const stack = tree.slice(0);
+export function flattenTree(tree: any[], childrenKey = 'children') {
+  const result = []
+  const stack = tree.slice(0)
 
   while (stack.length > 0) {
-    const node = stack.pop();
-    result.push(node);
+    const node = stack.pop()
+    result.push(node)
 
     // Check for children and push them onto the stack in reverse order
     if (node[childrenKey]) {
-      stack.push(...node[childrenKey].reverse());
+      stack.push(...node[childrenKey].reverse())
     }
   }
 
-  return result;
+  return result
 }
-// export function flattenTreeToMap<T = any>(tree: T[], idKey = 'id', childrenKey = "children") {
-//   const resultMap = new Map();
-//   const stack = [...tree]
-
-//   while (stack.length > 0) {
-//     const node: any = stack.pop();
-//     resultMap.set(node[idKey], node)
-
-//     // Check for children and push them onto the stack in reverse order
-//     if (node[childrenKey]) {
-//       for (let i = node[childrenKey].length - 1; i >= 0; i--) {
-//         stack.push(node[childrenKey][i]);
-//     }
-//     }
-//   }
-
-//   return resultMap;
-// }
-
-export function flattenTreeToMap(tree: any[], idKey = 'id', childrenKey = 'children') {
-  const resultMap = new Map();
-  const stack = [{ nodes: tree, parentWeight: 0, depth: 0 }];
+export function flattenTreeToMap<T = any>(
+  tree: T[],
+  idKey = 'id',
+  childrenKey = 'children'
+) {
+  const resultMap = new Map() // 创建一个 Map 存储结果
+  const stack = [...tree].reverse() // 初始化栈
+  let depth = 0
 
   while (stack.length > 0) {
-    const { nodes, parentWeight, depth } = stack.shift();
+    const node = stack.pop() // 弹出栈顶节点和深度
 
-    // Initialize a variable to keep track of the sum of weights of previous siblings
-    let precedingSiblingWeightsSum = 0;
+    if (node) {
+      // 给节点增加 d 属性
+      node.depth = depth++
+      //   console.log('zz', node.id, node.d)
+      resultMap.set(node[idKey], node) // 将节点添加到结果 Map
 
-    for (let i = 0; i < nodes.length; i++) {
-        const node = nodes[i];
-
-        // Calculate the weight based on depth, parent's weight, and sum of preceding siblings' weights
-        const weight = depth + parentWeight + precedingSiblingWeightsSum;
-
-        // Create a new node object with index and weight
-        const nodeWithWeight = { ...node, indexInParent: i, weight };
-
-        resultMap.set(node[idKey], nodeWithWeight);
-
-        // Update the sum of weights for the next sibling
-        precedingSiblingWeightsSum += weight; // Add current node's weight to the sum
-
-        // If the node has children, push them to the stack with updated depth and parent's weight
-        if (node[childrenKey]) {
-            stack.push({ nodes: node[childrenKey], parentWeight: weight, depth: depth + 1 });
+      // 将子节点反向推入栈中，并递增深度
+      if (node[childrenKey]) {
+        for (let i = node[childrenKey].length - 1; i >= 0; i--) {
+          stack.push(node[childrenKey][i])
         }
+      }
     }
-}
-  return resultMap;
+  }
+
+  return resultMap
 }
 
 export function getNodeAndDescendantIdsFromFlat(
   flatTree: any[],
   targetId: string,
-  idKey = "id",
-  parentIdKey = "parentId"
+  idKey = 'id',
+  parentIdKey = 'parentId'
 ) {
   // Step 1: Build a map of parentId -> child nodes
-  const parentMap = new Map();
+  const parentMap = new Map()
 
   for (const node of flatTree) {
-    const parentId = node[parentIdKey];
+    const parentId = node[parentIdKey]
     if (!parentMap.has(parentId)) {
-      parentMap.set(parentId, []);
+      parentMap.set(parentId, [])
     }
-    parentMap.get(parentId).push(node[idKey]);
+    parentMap.get(parentId).push(node[idKey])
   }
 
   // Step 2: Collect target node and descendants using BFS
-  const result = [];
-  const queue = [targetId];
+  const result = []
+  const queue = [targetId]
 
   while (queue.length > 0) {
-    const currentId = queue.shift();
-    result.push(currentId);
+    const currentId = queue.shift()
+    result.push(currentId)
 
     // Add children of the current node to the queue
     if (parentMap.has(currentId)) {
-      queue.push(...parentMap.get(currentId));
+      queue.push(...parentMap.get(currentId))
     }
   }
 
-  return result;
+  return result
 }
 
-export function getNodeAndDescendantIdsFromMap(flatTreeMap: Map<string, any>, targetId: string, idKey = 'id', parentIdKey = 'parentId') {
+export function getNodeAndDescendantIdsFromMap(
+  flatTreeMap: Map<string, any>,
+  targetId: string,
+  idKey = 'id',
+  parentIdKey = 'parentId'
+) {
   // Step 1: Build a parent-child map from the Map-based flat tree
-  const parentMap = new Map();
-  
+  const parentMap = new Map()
+
   for (const [nodeId, node] of flatTreeMap.entries()) {
-      const parentId = node[parentIdKey];
-      if (!parentMap.has(parentId)) {
-          parentMap.set(parentId, []);
-      }
-      parentMap.get(parentId).push(nodeId);
+    const parentId = node[parentIdKey]
+    if (!parentMap.has(parentId)) {
+      parentMap.set(parentId, [])
+    }
+    parentMap.get(parentId).push(nodeId)
   }
 
   // Step 2: Collect target node and descendants using BFS
-  const result = [];
-  const queue = [targetId];
+  const result = []
+  const queue = [targetId]
 
   while (queue.length > 0) {
-      const currentId = queue.shift();
-      result.push(currentId);
-      
-      // Add children of the current node to the queue
-      if (parentMap.has(currentId)) {
-          queue.push(...parentMap.get(currentId));
-      }
+    const currentId = queue.shift()
+    result.push(currentId)
+
+    // Add children of the current node to the queue
+    if (parentMap.has(currentId)) {
+      queue.push(...parentMap.get(currentId))
+    }
   }
 
-  return result;
+  return result
 }
 
-
-
-export function getPathToRootFromArray(flatTree: any[], targetId: string, idKey = 'id', parentIdKey = 'parentId') {
+export function getPathToRootFromArray(
+  flatTree: any[],
+  targetId: string,
+  idKey = 'id',
+  parentIdKey = 'parentId'
+) {
   // Step 1: Build a Map for quick lookup of nodes by id
-  const nodeMap = new Map(flatTree.map(node => [node[idKey], node]));
-  
+  const nodeMap = new Map(flatTree.map((node) => [node[idKey], node]))
+
   // Step 2: Collect path from target node to the root
-  const path = [];
-  let currentId = targetId;
+  const path = []
+  let currentId = targetId
 
   while (nodeMap.has(currentId)) {
-      const node = nodeMap.get(currentId);
-      path.push(node[idKey]);
-      
-      // Move up to the parent node
-      currentId = node[parentIdKey];
-      
-      // Stop if we've reached a root node (parentId is null or undefined)
-      if (currentId == null) break;
+    const node = nodeMap.get(currentId)
+    path.push(node[idKey])
+
+    // Move up to the parent node
+    currentId = node[parentIdKey]
+
+    // Stop if we've reached a root node (parentId is null or undefined)
+    if (currentId == null) break
   }
 
-  return path;
+  return path
 }
 
-export function getPathToRootFromMap(flatTreeMap: Map<string, any>, targetId: string, idKey = 'id', parentIdKey = 'parentId') {
-  const path = [];
-  let currentId = targetId;
+export function getPathToRootFromMap(
+  flatTreeMap: Map<string, any>,
+  targetId: string,
+  idKey = 'id',
+  parentIdKey = 'parentId'
+) {
+  const path = []
+  let currentId = targetId
 
   while (flatTreeMap.has(currentId)) {
-      const node = flatTreeMap.get(currentId);
-      path.push(node[idKey]);
-      
-      // Move up to the parent node
-      currentId = node[parentIdKey];
-      
-      // Stop if we've reached a root node (parentId is null or undefined)
-      if (currentId == null) break;
+    const node = flatTreeMap.get(currentId)
+    path.push(node[idKey])
+
+    // Move up to the parent node
+    currentId = node[parentIdKey]
+
+    // Stop if we've reached a root node (parentId is null or undefined)
+    if (currentId == null) break
   }
 
-  return path;
+  return path
 }
