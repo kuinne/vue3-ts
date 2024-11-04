@@ -17,9 +17,9 @@ export function flattenTree(tree: any[], childrenKey = "children") {
 export function flattenTreeToMap<T = any>(
   tree: T[],
   idKey = "id",
-  childrenKey = "children"
+  childrenKey = "children",
+  resultMap = new Map()
 ) {
-  const resultMap = new Map(); // 创建一个 Map 存储结果
   const stack = [...tree].reverse(); // 初始化栈
   let depth = 0;
 
