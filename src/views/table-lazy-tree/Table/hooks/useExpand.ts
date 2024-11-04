@@ -52,7 +52,6 @@ export function useExpand(
     expandedRowKeys,
 
     loadingKeys,
-    load,
     expand,
     expandAll,
   }
