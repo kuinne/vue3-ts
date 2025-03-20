@@ -1,212 +1,213 @@
-import { ElButton, ElInput } from 'element-plus'
-import { defineComponent, ref, computed } from 'vue'
-import { calculateMaxNodes, genTree, findClosestConfig } from './utils'
+import { ElButton, ElInput } from "element-plus";
+import { defineComponent, ref, computed } from "vue";
+import { calculateMaxNodes, genTree, findClosestConfig } from "./utils";
 
-import Table from './Table'
-import { TableInstanceType } from './Table/type'
+import Table from "./Table";
+import { TableInstanceType } from "./Table/type";
 interface User {
-  id: String
-  date: string
-  name: string
-  address: string
-  hasChildren?: boolean
-  children?: User[]
+  id: String;
+  date: string;
+  name: string;
+  address: string;
+  hasChildren?: boolean;
+  children?: User[];
 }
 
-const level = 8
-const n = 3
+const level = 6;
+const n = 6;
 
 export default defineComponent({
   setup() {
-    const loading = ref(false)
-    const tableRef = ref<TableInstanceType>()
-    const treeData = ref<any[]>([])
+    const loading = ref(false);
+    const tableRef = ref<TableInstanceType>();
+    const treeData = ref<any[]>([]);
 
-    const keyword = ref('')
+    const keyword = ref("");
 
-    const expandedRowKeys = ref<string[]>([])
+    const expandedRowKeys = ref<string[]>([]);
 
     const columns = computed(() => [
       {
-        dataKey: 'name',
-        key: 'name',
-        title: '部门',
-        width: '20%',
+        dataKey: "name",
+        key: "name",
+        title: "部门",
+        width: "20%",
       },
       {
-        dataKey: 'code',
-        key: 'code',
-        title: '部门编号',
-        width: '20%',
+        dataKey: "code",
+        key: "code",
+        title: "部门编号",
+        width: "20%",
       },
       {
-        dataKey: 'personCount',
-        key: 'personCount',
-        title: '人员数',
-        width: '10%',
+        dataKey: "personCount",
+        key: "personCount",
+        title: "人员数",
+        width: "10%",
       },
       {
-        dataKey: 'createBy',
-        key: 'createBy',
-        title: '创建人',
-        width: '15%',
+        dataKey: "createBy",
+        key: "createBy",
+        title: "创建人",
+        width: "15%",
       },
       {
-        dataKey: 'createTime',
-        key: 'createTime',
-        title: '创建时间',
-        width: '15%',
+        dataKey: "createTime",
+        key: "createTime",
+        title: "创建时间",
+        width: "15%",
       },
       {
-        dataKey: 'state',
-        key: 'state',
-        title: '启用',
-        width: '10%',
+        dataKey: "state",
+        key: "state",
+        title: "启用",
+        width: "10%",
       },
-    ])
+    ]);
 
     const getData = async () => {
-      loading.value = true
-      treeData.value = []
-      let total = calculateMaxNodes(level, n)
-      console.log('total', total)
+      loading.value = true;
+      treeData.value = [];
+      let total = calculateMaxNodes(level, n);
+      console.log("total", total);
 
-      // const res = genTree(level, n, (node) => ({
-      //   ...node,
-      // }));
+      const res = genTree(level, n, (node) => ({
+        ...node,
+      }));
 
-      const res = [
-        {
-          id: '1',
-          name: '1',
-          depth: 1,
-          leaf: false,
-          level: 1,
-          path: '1',
-          parentId: null,
-          code: '132321313',
-          // children: Array.from({ length: 100 }).map((item, index) => ({
-          //   id: `1_${index + 1}`,
-          //   name: `1_${index + 1}`,
-          //   depth: 1 + (index + 1),
-          //   leaf: true,
-          //   level: 2,
-          //   path: `1/1_${index + 1}`,
-          //   parentId: '1',
-          // })),
-          children: [
-            {
-              id: '1_1',
-              name: '1_1',
-              depth: 2,
-              level: 2,
-              code: '1323424324321313',
-              parentId: '1',
-              children: [
-                {
-                  id: '1_1_1',
-                  name: '1_1_1',
-                  depth: 3,
-                  level: 3,
-                  code: '1323424324321313',
-                  parentId: '1_1',
-                  children: [
-                    {
-                      id: '1_1_1_1',
-                      name: '1_1_1_1',
-                      depth: 4,
-                      level: 4,
-                      leaf: true,
-                      parentId: '1_1_1',
-                    },
-                  ],
-                },
-              ],
-            },
-            {
-              id: '1_2',
-              name: '1_2',
-              depth: 5,
-              level: 2,
-              parentId: '1',
-            },
-          ],
-        },
-        {
-          id: '2',
-          name: '2',
-          depth: 200,
-          leaf: true,
-          level: 1,
-          path: '2',
-          parentId: null,
-          // children: [
-          //   {
-          //     id: '2_1',
-          //     name: '2_1',
-          //     depth: 7,
-          //     children: [
-          //       {
-          //         id: '2_1_1',
-          //         name: '2_1_1',
-          //         depth: 8,
-          //       },
-          //     ],
-          //   },
-          // ],
-        },
-      ]
+      // const res = [
+      //   {
+      //     id: "1",
+      //     name: "1",
+      //     depth: 1,
+      //     leaf: false,
+      //     level: 1,
+      //     path: "1",
+      //     parentId: null,
+      //     code: "132321313",
+      //     // children: Array.from({ length: 100 }).map((item, index) => ({
+      //     //   id: `1_${index + 1}`,
+      //     //   name: `1_${index + 1}`,
+      //     //   depth: 1 + (index + 1),
+      //     //   leaf: true,
+      //     //   level: 2,
+      //     //   path: `1/1_${index + 1}`,
+      //     //   parentId: '1',
+      //     // })),
+      //     children: [
+      //       {
+      //         id: "1_1",
+      //         name: "1_1",
+      //         depth: 2,
+      //         level: 2,
+      //         code: "1323424324321313",
+      //         parentId: "1",
+      //         children: [
+      //           {
+      //             id: "1_1_1",
+      //             name: "1_1_1",
+      //             depth: 3,
+      //             level: 3,
+      //             code: "1323424324321313",
+      //             parentId: "1_1",
+      //             children: [
+      //               {
+      //                 id: "1_1_1_1",
+      //                 name: "1_1_1_1",
+      //                 depth: 4,
+      //                 level: 4,
+      //                 leaf: true,
+      //                 parentId: "1_1_1",
+      //               },
+      //             ],
+      //           },
+      //         ],
+      //       },
+      //       {
+      //         id: "1_2",
+      //         name: "1_2",
+      //         depth: 5,
+      //         level: 2,
+      //         parentId: "1",
+      //         leaf: true,
+      //       },
+      //     ],
+      //   },
+      //   {
+      //     id: "2",
+      //     name: "2",
+      //     depth: 200,
+      //     leaf: true,
+      //     level: 1,
+      //     path: "2",
+      //     parentId: null,
+      //     // children: [
+      //     //   {
+      //     //     id: '2_1',
+      //     //     name: '2_1',
+      //     //     depth: 7,
+      //     //     children: [
+      //     //       {
+      //     //         id: '2_1_1',
+      //     //         name: '2_1_1',
+      //     //         depth: 8,
+      //     //       },
+      //     //     ],
+      //     //   },
+      //     // ],
+      //   },
+      // ];
 
       // const res = await fetch(
       //   "http://172.168.70.114:8081/api/admin/basic-application/department/v1/tree"
       // ).then((res) => res.json());
 
-      console.log('item', res[0])
+      console.log("item", res[0]);
 
-      treeData.value = res
+      treeData.value = res;
 
-      loading.value = false
-    }
+      loading.value = false;
+    };
 
     const handleRowExpand = ({
       expanded,
       rowKey,
     }: {
-      expanded: boolean
-      rowKey: string
+      expanded: boolean;
+      rowKey: string;
     }) => {
-      console.log('expanded', expanded, rowKey)
-    }
+      console.log("expanded", expanded, rowKey);
+    };
 
-    console.log(findClosestConfig(100000))
+    console.log(findClosestConfig(100000));
 
-    getData()
+    getData();
 
     const reset = () => {
-      treeData.value = []
-      getData()
-    }
+      treeData.value = [];
+      getData();
+    };
 
     const selectAll = () => {
-      tableRef.value?.selectAll(true)
-    }
+      tableRef.value?.selectAll(true);
+    };
 
     const expandAll = () => {
-      tableRef.value?.expandAll()
-    }
+      tableRef.value?.expandAll();
+    };
 
-    const deleteRows = () => {}
+    const deleteRows = () => {};
 
     const expandLast = () => {
       // tableRef.value?.scrollToRow("6_4_3_4_5_1");
-      tableRef.value?.scrollToRow('1_10')
-    }
+      tableRef.value?.scrollToRow("3_1_1_1_1");
+    };
 
     const load = (rowData: any) => {
-      console.log('load rowData', rowData)
+      console.log("load rowData", rowData);
       return new Promise((resolve) => {
         setTimeout(() => {
-          if (rowData.id === '1') {
+          if (rowData.id === "1") {
             resolve(
               Array.from({ length: 100 }).map((item, index) => ({
                 id: `1_${index + 1}`,
@@ -215,15 +216,15 @@ export default defineComponent({
                 leaf: true,
                 level: 2,
                 path: `1/1_${index + 1}`,
-                parentId: '1',
+                parentId: "1",
               }))
-            )
+            );
           } else {
-            resolve([])
+            resolve([]);
           }
-        }, 1000)
-      })
-    }
+        }, 1000);
+      });
+    };
 
     return () =>
       loading.value ? (
@@ -253,6 +254,6 @@ export default defineComponent({
             />
           </div>
         </div>
-      )
+      );
   },
-})
+});
