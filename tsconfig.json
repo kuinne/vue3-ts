@@ -3,7 +3,7 @@
     "target": "ESNext",
     "useDefineForClassFields": true,
     "module": "ESNext",
-    "moduleResolution": "Node16",
+    "moduleResolution": "Node",
     "strict": true,
     "jsx": "preserve",
     "resolveJsonModule": true,
@@ -12,8 +12,7 @@
     "lib": ["ESNext", "DOM"],
     "skipLibCheck": true,
     "noEmit": true,
-    "jsxImportSource": "vue",
-    "types": ["element-plus/global", "element-plus/icons-vue/dist/types"]
+    "jsxImportSource": "vue"
   },
   "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue"],
   "references": [{ "path": "./tsconfig.node.json" }]

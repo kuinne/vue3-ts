@@ -106,6 +106,8 @@
     "sortablejs-vue3": "^1.2.11",
     "spark-md5": "^3.0.2",
     "swrv": "^1.0.4",
+    "unplugin-auto-import": "^19.1.2",
+    "unplugin-vue-components": "^28.5.0",
     "valibot": "^0.11.0",
     "vconsole": "^3.15.1",
     "vue": "^3.5.13",
