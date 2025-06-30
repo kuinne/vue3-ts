@@ -10,7 +10,9 @@
     "commit": "git-cz",
     "prepare": "husky install",
     "test": "vitest",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage",
+    "format": "prettier --write \"src/**/*.{js,ts,vue,json}\"",
+    "format:check": "prettier --check \"src/**/*.{js,ts,vue,json}\""
   },
   "config": {
     "commitizen": {
@@ -131,15 +133,21 @@
     "@types/dom-to-image": "^2.6.4",
     "@types/echarts": "^4.9.16",
     "@types/lodash": "^4.14.197",
+    "@typescript-eslint/eslint-plugin": "^8.30.1",
+    "@typescript-eslint/parser": "^8.30.1",
     "@vitejs/plugin-vue": "^4.1.0",
     "@vitejs/plugin-vue-jsx": "^3.0.1",
+    "@vue/eslint-config-typescript": "^14.5.0",
     "commitizen": "^4.3.0",
     "commitlint-config-cz": "^0.13.3",
     "cz-conventional-changelog": "^3.3.0",
     "cz-customizable": "^7.0.0",
+    "eslint": "^9.24.0",
+    "eslint-plugin-vue": "^10.0.0",
     "husky": "^8.0.0",
     "less": "^4.2.0",
     "lint-staged": "^13.2.0",
+    "prettier": "^3.5.3",
     "sass": "^1.60.0",
     "typescript": "^4.9.3",
     "unplugin-icons": "^0.17.4",

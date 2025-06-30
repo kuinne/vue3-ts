@@ -4,6 +4,7 @@ import vueJsx from "@vitejs/plugin-vue-jsx";
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
+import path from 'path'
 
 import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
@@ -25,6 +26,11 @@ export default defineConfig({
       resolvers: [ElementPlusResolver()],
     }),
   ],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, 'src')
+    }
+  },
   optimizeDeps: {
     exclude: ["@ffmpeg/ffmpeg", "@ffmpeg/util"],
   },

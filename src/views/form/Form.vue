@@ -1,225 +1,193 @@
 <template>
-  <form
+  <div
     ref="formRef"
     class="form"
     :class="[
-      `form--${layout}`,
-      `form--label-align-${labelAlign}`,
+      `form--layout-${layout}`,
       `form--label-position-${labelPosition}`,
-      { 'form--inline': inline }
+      `form--size-${size}`
     ]"
+    :style="{
+      '--form-grid-cols': layout === 'grid' ? gridCols : undefined,
+      '--form-row-gap': rowGap,
+      '--form-col-gap': colGap
+    }"
   >
-    <div
-      v-if="layout === 'grid'"
-      class="form__grid"
-      :style="{
-        gridTemplateColumns: `repeat(${gridCols}, 1fr)`,
-        gridAutoRows: 'minmax(min-content, max-content)'
-      }"
-    >
-      <FormItem
-        v-for="item in items"
-        :key="item.name"
-        :item="item"
-        :model="model"
-        :label-width="item.labelWidth || unifiedLabelWidth"
-        :disabled="item.disabled || disabled"
-        :label-align="item.labelAlign || labelAlign"
-        :label-position="item.labelPosition || labelPosition"
-        :style="{
-          gridColumn: `span ${item.gridColSpan || gridColSpan || 1}`,
-          gridRow: `span ${item.gridRowSpan || gridRowSpan || 1}`
-        }"
-        @update:model="handleUpdate"
-      />
-    </div>
-    <template v-else>
-      <FormItem
-        v-for="item in items"
-        :key="item.name"
-        :item="item"
-        :model="model"
-        :label-width="item.labelWidth || unifiedLabelWidth"
-        :disabled="item.disabled || disabled"
-        :label-align="item.labelAlign || labelAlign"
-        :label-position="item.labelPosition || labelPosition"
-        @update:model="handleUpdate"
-      />
-    </template>
-  </form>
+    <slot></slot>
+  </div>
 </template>
 
-<script lang="ts" setup generic="T extends Record<string, any>">
-import { ref, provide, watch, onMounted, nextTick, computed } from 'vue'
-import FormItem from './FormItem.vue'
-import type { FormProps, FormInstance } from './types'
+<script lang="ts" setup>
+  import { ref, watch, onMounted, nextTick, computed } from 'vue'
+  import type { FormProps } from './types/form'
+  import { useProvideFormContext } from './hooks/useFormContext'
 
-const props = withDefaults(defineProps<FormProps<T>>(), {
-  layout: 'horizontal',
-  labelAlign: 'right',
-  labelPosition: 'inline',
-  labelWidth: '100px',
-  inline: false,
-  disabled: false,
-  gridCols: 3,
-  gridColSpan: 1,
-  gridRowSpan: 1
-})
+  const props = withDefaults(defineProps<FormProps>(), {
+    layout: 'horizontal',
+    labelAlign: 'right',
+    labelPosition: 'inline',
+    labelWidth: '100px',
+    disabled: false,
+    gridCols: 3,
+    gridColSpan: 1,
+    gridRowSpan: 1,
+    rowGap: '20px',
+    colGap: '20px',
+    size: 'default'
+  })
 
-const emit = defineEmits<{
-  (e: 'update:model', value: T): void
-}>()
+  const formRef = ref<HTMLElement>()
+  const maxLabelWidth = ref(0)
 
-const formRef = ref<HTMLElement>()
-const maxLabelWidth = ref(0)
+  // 计算最大标签宽度
+  const calculateMaxLabelWidth = async () => {
+    if (
+      (props.layout === 'vertical' || props.layout === 'horizontal') &&
+      props.labelPosition === 'inline' &&
+      props.labelWidth === 'auto'
+    ) {
+      await nextTick()
+      const labels = formRef.value?.getElementsByClassName('form-item__label')
 
-// 计算最大标签宽度
-const calculateMaxLabelWidth = async () => {
-  if (props.layout === 'vertical' && props.labelWidth === 'auto') {
-    await nextTick()
-    const labels = formRef.value?.querySelectorAll('.form-item__label')
-    if (labels) {
-      let maxWidth = 0
-      // 创建一个临时的 span 元素来计算文本宽度
-      const tempSpan = document.createElement('span')
-      tempSpan.style.visibility = 'hidden'
-      tempSpan.style.position = 'absolute'
-      tempSpan.style.whiteSpace = 'nowrap'
-      tempSpan.style.fontSize = '14px' // 使用与标签相同的字体大小
-      document.body.appendChild(tempSpan)
+      if (labels && labels.length > 0) {
+        let maxWidth = 0
+        // 创建临时span计算文本宽度
+        const tempSpan = document.createElement('span')
+        tempSpan.style.visibility = 'hidden'
+        tempSpan.style.position = 'absolute'
+        tempSpan.style.whiteSpace = 'nowrap'
+        tempSpan.style.fontSize = '14px'
+        document.body.appendChild(tempSpan)
 
-      labels.forEach(label => {
-        const text = label.textContent?.trim() || ''
-        tempSpan.textContent = text
-        const width = tempSpan.getBoundingClientRect().width
-        maxWidth = Math.max(maxWidth, width)
-      })
+        // 将HTMLCollection转换为数组
+        Array.from(labels).forEach((label: Element) => {
+          const text = label.textContent?.trim() || ''
+          tempSpan.textContent = text
+          const width = tempSpan.getBoundingClientRect().width
+          maxWidth = Math.max(maxWidth, width)
+        })
 
-      document.body.removeChild(tempSpan)
-      // 添加一些额外的padding，确保文本不会太靠近边缘
-      maxLabelWidth.value = maxWidth + 16
-    }
-  }
-}
-
-// 监听布局和标签宽度的变化
-watch(() => [props.layout, props.labelWidth], () => {
-  calculateMaxLabelWidth()
-})
-
-// 监听表单项变化
-watch(() => props.items, () => {
-  calculateMaxLabelWidth()
-}, { deep: true })
-
-onMounted(() => {
-  calculateMaxLabelWidth()
-})
-
-// 统一的标签宽度
-const unifiedLabelWidth = computed(() => {
-  if (props.layout !== 'vertical' || props.labelWidth !== 'auto') {
-    return props.labelWidth
-  }
-  return `${maxLabelWidth.value}px`
-})
-
-const handleUpdate = (name: string, value: any) => {
-  const newModel = { ...props.model, [name]: value }
-  emit('update:model', newModel)
-}
-
-defineExpose({
-  validate: async () => {
-    // 实现表单验证逻辑
-    return true
-  },
-  resetFields: () => {
-    // 实现重置表单逻辑
-  },
-  clearValidate: () => {
-    // 实现清除验证逻辑
-  }
-})
-</script>
-
-<style lang="scss" scoped>
-.form {
-  width: 100%;
-
-  &--horizontal {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 20px;
-
-    :deep(.form-item) {
-      display: flex;
-      margin-bottom: 0;
-    }
-  }
-
-  &--vertical {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-
-    :deep(.form-item) {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      width: 100%;
-
-      .form-item__content {
-        width: 100%;
+        document.body.removeChild(tempSpan)
+        // 添加padding
+        maxLabelWidth.value = maxWidth + 16
       }
     }
   }
 
-  &--grid {
-    display: grid;
-    gap: 20px;
+  // 监听布局和标签宽度的变化
+  watch(
+    () => [props.layout, props.labelWidth, props.labelPosition],
+    () => {
+      calculateMaxLabelWidth()
+    }
+  )
+
+  onMounted(() => {
+    calculateMaxLabelWidth()
+  })
+
+  // 统一的标签宽度
+  const unifiedLabelWidth = computed(() => {
+    if (
+      props.layout === 'vertical' &&
+      props.labelPosition === 'inline' &&
+      props.labelWidth === 'auto'
+    ) {
+      return `${maxLabelWidth.value}px`
+    }
+    return props.labelWidth
+  })
+
+  useProvideFormContext({
+    labelWidth: computed(() => unifiedLabelWidth.value),
+    labelEllipsis: computed(() => props.labelEllipsis),
+    labelAlign: computed(() => props.labelAlign),
+    labelPosition: computed(() => props.labelPosition),
+    gridCols: computed(() => props.gridCols),
+    gridColSpan: computed(() => props.gridColSpan),
+    gridRowSpan: computed(() => props.gridRowSpan),
+    size: computed(() => props.size)
+  })
+
+  defineExpose({
+    validate: async () => {
+      // 获取所有表单项
+      const formItems = formRef.value?.getElementsByClassName('form-item')
+      if (!formItems) return true
+
+      // 遍历所有表单项进行验证
+      const results = await Promise.all(
+        Array.from(formItems).map(async item => {
+          const formItem = item as any
+          if (formItem.__vueParentComponent?.exposed?.validate) {
+            return formItem.__vueParentComponent.exposed.validate()
+          }
+          return true
+        })
+      )
+
+      // 所有表单项都验证通过才返回 true
+      return results.every(result => result === true)
+    },
+    resetFields: () => {
+      // 重置所有表单项的值
+      const formItems = formRef.value?.getElementsByClassName('form-item')
+      if (!formItems) return
+
+      Array.from(formItems).forEach(item => {
+        const formItem = item as any
+        if (formItem.__vueParentComponent?.exposed?.clearValidate) {
+          formItem.__vueParentComponent.exposed.clearValidate()
+        }
+      })
+    },
+    clearValidate: () => {
+      // 清除所有表单项的验证状态
+      const formItems = formRef.value?.getElementsByClassName('form-item')
+      if (!formItems) return
+
+      Array.from(formItems).forEach(item => {
+        const formItem = item as any
+        if (formItem.__vueParentComponent?.exposed?.clearValidate) {
+          formItem.__vueParentComponent.exposed.clearValidate()
+        }
+      })
+    }
+  })
+</script>
+
+<style lang="scss" scoped>
+  :root {
+    // 网格变量
+    --form-grid-cols: 3;
+    --form-row-gap: 20px;
+    --form-col-gap: 20px;
   }
 
-  &--inline {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-  }
+  .form {
+    width: 100%;
+    margin-bottom: var(--form-row-gap);
 
-  &--label-align-left {
-    :deep(.form-item__label) {
-      text-align: left;
+    &--layout {
+      &-horizontal {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: var(--form-row-gap);
+      }
+
+      &-vertical {
+        display: flex;
+        flex-direction: column;
+        gap: var(--form-row-gap);
+      }
+
+      &-grid {
+        display: grid;
+        grid-template-columns: repeat(var(--form-grid-cols), 1fr);
+        row-gap: var(--form-row-gap);
+        column-gap: var(--form-col-gap);
+      }
     }
   }
-
-  &--label-align-right {
-    :deep(.form-item__label) {
-      text-align: right;
-    }
-  }
-
-  &--label-position-inline {
-    :deep(.form-item) {
-      flex-direction: row;
-
-    }
-  }
-
-  &--label-position-top {
-    :deep(.form-item) {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-
-    :deep(.form-item__label) {
-      width: 100%;
-    }
-  }
-}
-
-.form__grid {
-  display: grid;
-  gap: 20px;
-}
-</style> 
+</style>
